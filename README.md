@@ -41,26 +41,20 @@ Three verdicts lead to three epilogues: swear he seeks a crown, tell your patron
 
 ## Art
 
-The panoramas in `art/` are placeholder illustrations drawn by `tools/make_art.py`. The script reads the hotspot positions from `index.html` and draws each object where its hotspot sits, so the art always lines up. If you move a hotspot, rerun:
+The scenes use painted panoramas in `art/*.jpg`, made by Gemini from the reference images and prompts in `gemini/`. They were upscaled 2× and the hotspots were placed by hand.
 
-```
-python3 tools/make_art.py
-```
+The older placeholder drawings are still in `art/*.svg`, and `tools/make_art.py` can regenerate them. To go back to one, point that scene's `image:` at the `.svg` file.
 
-### Swapping in painted art
+### Replacing a painting
 
-To replace a scene with a painted panorama, as in the Pinkerton game:
-
-1. Give Gemini the reference image from `gemini/` and its prompt from `gemini/GEMINI_PROMPTS.md`.
-2. Put it in `art/` and change that scene's `image:` in `index.html` to the new file.
-3. Open the game, press the **gear** (top left), pick the scene, and tap each hotspot's spot as it asks. Use **Copy All** and paste the new `x`/`y` values back into `index.html`.
-
-`gemini/` has a reference image of every scene and `GEMINI_PROMPTS.md`, a prompt for each one that asks for a realistic repaint with the same layout.
+1. Give Gemini the reference image from `gemini/` and its prompt from `gemini/GEMINI_PROMPTS.md`, or give it the current `.jpg` with a short edit request.
+2. Save the result into `art/` and point the scene's `image:` at it.
+3. Open the game, press the **gear** (top left), pick the scene, and tap each hotspot's spot as it asks. Use **Copy All** and paste the new `x`/`y` values into `index.html`.
 
 ## Files
 
 - `index.html`: the whole game, engine and story. Scenes, hotspots, and the ending text live in `GAME_DATA` near the top of the script.
-- `art/*.svg`: placeholder panoramas.
+- `art/*.jpg`: the painted panoramas the game uses. `art/*.svg`: the older placeholder drawings.
 - `tools/make_art.py`: regenerates the placeholder art from the hotspot positions.
 - `gemini/`: reference images and prompts for realistic repaints.
 - `tools/dump_scenes.js`: prints each scene's hotspot positions (used by `make_art.py`).
