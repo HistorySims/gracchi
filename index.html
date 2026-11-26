@@ -1246,6 +1246,25 @@ const GAME_DATA = {
               "You can look around by dragging left and right. Touch anything that catches your eye: people, objects, documents. Everything you learn goes into your notebook."
             ] } },
 
+        { id:'mirror', label:'A Bronze Mirror', x:0.115, y:0.80, type:'object', kind:'trivial', required:false,
+          content:{ title:'A Bronze Mirror',
+            text:"A polished bronze mirror on a stand. There are no glass mirrors yet, so your face looks back at you a little golden and blurry: clean-shaven, as Roman men are these days, hair cut short.\n\nEvery Roman citizen man has a name in three parts. A first name, like Publius. A family name, like Cornelius. And often a nickname that the family keeps, like Scipio, which means 'walking stick.' When you were freed, you took your master's first two names and kept your old slave name on the end. Publius Cornelius, and then the name your mother gave you.\n\nGirls get only the family name. Every daughter of the Cornelii is Cornelia. If there are three, they are numbered." } },
+
+        { id:'phoebe', label:'The Old Nurse', x:0.655, y:0.56, type:'dialogue', kind:'ambiance', noPoi:true, required:false,
+          content:{ title:'Phoebe the Nurse',
+            desc:"An old slave woman folding linen at a chest. She is the nurse who raised half the children of this house, you among them.",
+            lines:[
+              "Look at you, in a citizen's toga. I remember you in nothing but a tunic and a scraped knee.",
+              "The toga is for citizens only, you know. A slave may not wear one, and a foreigner may not. White wool, and heavy, and you need someone to help you put it on. The senators have a purple stripe on theirs, so you know who to step aside for.",
+              "When a freeborn boy is born, they hang a bulla round his neck, a little gold locket against the evil eye. He wears it until he is about sixteen, then puts on the plain white toga of a man. A girl wears a little moon charm, and takes it off the night before she marries.",
+              "Marries at fourteen, mostly. The master's daughter was promised at twelve. Then she goes from her father's house to her husband's, and if she is a good matron she holds the keys to the whole household.",
+              "Women cannot vote or sit in the Senate. But do not believe anyone who tells you we have no say in Rome. Who do you think the senators go home and talk to at night?"
+            ] } },
+
+        { id:'loom', label:'The Loom', x:0.860, y:0.48, type:'object', kind:'trivial', required:false,
+          content:{ title:'The Loom',
+            text:"A tall upright loom stands in the atrium, where every visitor can see it. Clay weights hang from the threads to keep them tight. In the old families the lady of the house still weaves here, or at least makes sure she is seen to.\n\nEvery Roman knows what a good woman's gravestone should say. One carved in Rome in these very years, for a woman named Claudia, ends like this: 'She loved her husband with all her heart. She bore two sons. She was charming in speech and graceful in her walk. She kept the house. She worked wool.'" } },
+
         { id:'skip_to_forum', label:'Skip to the Forum', x:0.92, y:0.12, type:'navigation', goto:'forum_day', dev:true }
       ],
 
@@ -1341,9 +1360,31 @@ const GAME_DATA = {
           content:{ title:'The Lacus Curtius',
             text:"A small fenced patch of old paving in the middle of the Forum. The story goes that a chasm once opened here, and the soothsayers said it would close only when Rome threw in her greatest treasure. A young soldier named Curtius rode his horse into it, fully armed, saying Rome had no greater treasure than a brave citizen. The earth closed over him. People toss coins in for luck." } },
 
+        { id:'stands', label:'Wooden Stands', x:0.915, y:0.36, type:'object', kind:'trivial', required:false,
+          content:{ title:'Wooden Stands',
+            text:"Carpenters are hammering together tiers of wooden seats at the end of the Forum. A great family is holding funeral games for a dead father: a feast for the people, and pairs of gladiators fighting here, in the middle of the city, in front of the Senate house.\n\nThere is no stone arena in Rome. The Colosseum will not be built for another two hundred years. Families who can pay rent the best seats; the poor watch from rooftops and steps.\n\nTen years from now a tribune will tear stands like these down in the night so the poor can watch for free. His name will be Gracchus." } },
+
+        { id:'vestal', label:'A Woman in White', x:0.255, y:0.64, type:'dialogue', kind:'ambiance', noPoi:true, required:false,
+          content:{ title:'Claudia, Vestal Virgin',
+            desc:"A woman in a long white robe, her hair bound with woollen ribbons under a white veil. A lictor walks ahead of her clearing the way, and people step aside and bow their heads. A Vestal Virgin.",
+            lines:[
+              "You may look. Everyone does. I serve Vesta, goddess of the hearth. In her round temple at the end of the Forum, six of us keep her sacred fire burning day and night. If it ever goes out, Rome is in danger.",
+              "They choose us as girls, between six and ten years old, and we serve for thirty years. A Vestal may own property and make a will without any man's permission. A lictor walks before me as he would before a consul. If a condemned man meets one of us by chance on the way to his execution, he goes free.",
+              "My name is Claudia. My sister, the tribune's wife, is Claudia too. Every daughter of the Claudii is Claudia. Romans give their girls the family name and number them if they must: the elder, the younger, Tertia, the third.",
+              "Ten years ago, when my father rode in his triumph, a tribune tried to drag him down from his chariot. I climbed up and rode beside him through the city, and no one dared lay a hand on a Vestal. So do not tell me women have no part in Roman politics."
+            ] } },
+
+        { id:'sundial', label:'A Sundial on a Pillar', x:0.390, y:0.47, type:'object', kind:'trivial', required:false,
+          content:{ title:'A Sundial on a Pillar',
+            text:"Rome's first sundial was carried home as war loot from the city of Catania in Sicily, about a hundred and thirty years ago, and set up here by the Rostra. Nobody noticed that Catania is much farther south than Rome. For ninety-nine years the whole city told the time by a sundial that was wrong. A newer one, made for Rome, stands here now.\n\nRomans split the daylight into twelve hours, sunrise to sunset. So a summer hour is long, and a winter hour is short." } },
+
+        { id:'lictors', label:"The Consul's Lictors", x:0.775, y:0.62, type:'object', kind:'ambiance', required:false,
+          content:{ title:"The Consul's Lictors",
+            text:"A line of men pushes through the crowd, each carrying on his shoulder a bundle of rods tied with red straps: the fasces. They are lictors, and they walk ahead of the consul, the highest official in Rome. There are two consuls, elected every year, so that no one man ever holds all the power. Each has twelve lictors.\n\nThe rods mean the consul can have a man beaten. Outside the city, an axe is tied into the bundle, meaning he can have a man put to death. Inside the city the axes are taken out. Here, a Roman citizen has the right to appeal to the People first." } },
+
         { id:'chickpeas', label:'The Chickpea Seller', x:0.955, y:0.82, type:'object', kind:'trivial', required:false,
           content:{ title:'The Chickpea Seller',
-            text:"A boy with a brazier is roasting chickpeas and selling them by the cupful, hot, for a copper. The smell drifts across half the Forum. He is doing better business today than any senator." } },
+            text:"A girl with a brazier is roasting chickpeas and selling them by the cupful, hot, for a copper. The smell drifts across half the Forum. She is doing better business today than any senator." } },
 
         { id:'to_palatine', label:'Up to the Palatine', x:0.565, y:0.17, type:'object', kind:'ambiance', required:false,
           goto:'gracchus_house', gotoText:'Climb to the House of Gracchus',
@@ -1437,7 +1478,26 @@ const GAME_DATA = {
 
         { id:'fountain', label:'The Public Fountain', x:0.965, y:0.58, type:'object', kind:'trivial', required:false,
           content:{ title:'The Public Fountain',
-            text:"A stone basin with water running into it from a lead pipe, and a queue of women with jars. The water is cold and clean. It comes from the new aqueduct, the Aqua Marcia, built just a few years ago, that brings water sixty miles from the springs of the Anio valley. Rome can carry a river across the hills. It has not yet found a way to keep a roof over these people's heads." } }
+            text:"A stone basin with water running into it from a lead pipe, and a queue of women with jars. The water is cold and clean. It comes from the new aqueduct, the Aqua Marcia, built just a few years ago, that brings water sixty miles from the springs of the Anio valley. Rome can carry a river across the hills. It has not yet found a way to keep a roof over these people's heads." } },
+
+        { id:'tertia', label:'A Girl with a Water Jar', x:0.670, y:0.66, type:'dialogue', kind:'clue', required:false,
+          content:{ title:'Tertia',
+            people:['Tertia'],
+            desc:"A girl of about eleven, barefoot, a water jar balanced on her head, watching everything with quick eyes.",
+            lines:[
+              "I'm Tertia. It means 'Third.' My sisters are Prima and Secunda. Father ran out of names.",
+              "I carry water up four flights of stairs twelve times a day, so I know every door in this building. Arrius pays me a copper to run messages for him: who's come in from the country, which courtyard they're sleeping in.",
+              "My brothers went to the schoolmaster to learn their letters. I learned mine on the steps, from Arrius' tablets. I can read every name on them. Don't tell my mother.",
+              "In two or three years they'll marry me off. Girls can't vote. But before I go, I'm going to see one vote with my own eyes."
+            ] } },
+
+        { id:'food_counter', label:'A Hot-Food Counter', x:0.345, y:0.60, type:'object', kind:'trivial', required:false,
+          content:{ title:'A Hot-Food Counter',
+            text:"A shop counter opens onto the courtyard with big clay pots sunk into it, steaming. For a copper you get a bowl of puls, a thick porridge of wheat or barley, with beans in it if you are lucky, and a bit of sausage if you are rich.\n\nMost rooms in the tenement have no kitchen at all. A cooking fire on the fourth floor is how whole buildings burn down. So the Subura eats out. Everything gets a splash of garum, a salty sauce made from fish guts left to rot in the sun. Romans love it." } },
+
+        { id:'chamber_pot', label:'Look Out Below', x:0.430, y:0.27, type:'object', kind:'trivial', required:false,
+          content:{ title:'Look Out Below',
+            text:"A shutter bangs open on the second floor and a woman empties a chamber pot into the courtyard. Everyone below has already jumped clear. There is no plumbing up there; the aqueduct water stops at the fountain on the ground.\n\nRoman law says that if something thrown from a window hurts a passer-by, whoever lives in that room has to pay. That there is a law about it tells you how often it happens." } }
       ]
     },
 
@@ -1458,6 +1518,10 @@ const GAME_DATA = {
               "And if a man will not sell? The estate's oxen get into his barley. His boundary stone walks fifty feet in the night. Last winter somebody threw a dead dog down my well.",
               "Go to law against a Scipio? Me? Ha. Who would the praetor believe?"
             ] } },
+
+        { id:'olive_tree', label:'The Olive Tree', x:0.035, y:0.47, type:'object', kind:'trivial', required:false,
+          content:{ title:'The Olive Tree',
+            text:"An old olive tree, twisted and silver-green, older than Old Tullus. Olives are the most useful thing a Roman farm grows. Their oil is for cooking, for burning in clay lamps at night, and for washing: Romans have no soap, so they rub oil on their skin and scrape it off, dirt and all, with a curved metal tool called a strigil.\n\nAn olive tree takes years to bear fruit and can live for centuries. A family that plants one expects to stay." } },
 
         { id:'ruined_farm', label:'A Ruined Farmhouse', x:0.165, y:0.47, type:'object', kind:'clue', required:false,
           content:{ title:'A Ruined Farmhouse',
@@ -1524,6 +1588,21 @@ const GAME_DATA = {
         { id:'hare', label:'A Hare', x:0.610, y:0.90, type:'object', kind:'trivial', required:false,
           content:{ title:'A Hare',
             text:"A hare bolts out of the stubble almost under your feet and zigzags away across the field. It has the run of the whole three thousand iugera, and owes nobody anything for it." } },
+
+        { id:'vilica', label:'A Woman with a Basket', x:0.730, y:0.64, type:'dialogue', kind:'clue', required:false,
+          content:{ title:'Philumena',
+            people:['Philumena'],
+            desc:"A slave woman carrying a basket of bread and a jug of water out to the field gang. She is the vilica, the overseer's partner, who runs the kitchen, the stores, the spinning, and the sick room.",
+            lines:[
+              "Philumena. Damon runs the fields; I run everything else. The master's farming book says a vilica should not gossip or wander about the neighbours. I'm talking to you anyway.",
+              "Slaves can't marry, under the law. Damon and I are together because the master allows it. Our children belong to the estate, the way the lambs do.",
+              "If this law comes and the estate is cut down, they won't free us. They'll sell us. At a sale, families get split up. I've seen it.",
+              "Do I want the poor to have land? I do. I would just like somebody, once, to ask what happens to us."
+            ] } },
+
+        { id:'via_road', label:'The Paved Road', x:0.905, y:0.94, type:'object', kind:'trivial', required:false,
+          content:{ title:'The Paved Road',
+            text:"The Via Tiburtina, paved with big fitted blocks of hard grey stone. Roman roads are built in layers like a cake: a deep trench, then rubble, then gravel, then sand, then paving stones on top, curved so rain runs off to the sides. They run as straight as the engineers can make them, so armies can march fast.\n\nEvery Roman mile, a thousand paces, a milestone tells you how far you are from Rome, in Roman numerals. I is one, V is five, X is ten. The stone up the road says XVI: sixteen miles." } },
 
         { id:'estate_back', label:'Back to Rome', x:0.985, y:0.86, type:'navigation', goto:'forum_day' }
       ]
@@ -1625,7 +1704,26 @@ const GAME_DATA = {
               "But you would not know it from the way the senators talk. My father dines out less and less these days. Nobody invites him."
             ] } },
 
-        { id:'house_back', label:'Back to the Forum', x:0.985, y:0.86, type:'navigation', goto:'forum_day' }
+        { id:'house_back', label:'Back to the Forum', x:0.985, y:0.86, type:'navigation', goto:'forum_day' },
+
+        { id:'sempronia', label:"The Tribune's Sister", x:0.525, y:0.58, type:'dialogue', kind:'clue', required:false,
+          content:{ title:'Sempronia',
+            people:['Sempronia'],
+            desc:"A woman sitting in the garden doorway, very still. She is the tribune's sister, married to the most famous general in Rome, Scipio Aemilianus, who is away in Spain besieging Numantia.",
+            lines:[
+              "I am Sempronia, his sister. Yes, another daughter named for the family. Every girl of the Sempronii is Sempronia.",
+              "My husband destroyed Carthage. Now he is starving Numantia into surrender. His letters ask after my mother and never mention my brother. That is how I know what he thinks.",
+              "My mother wanted sons who would be great. My husband wants a Rome that stays exactly as it is. I sit between them at dinner.",
+              "If this ends badly, my husband will say Tiberius brought it on himself. And I will go on living in his house."
+            ] } },
+
+        { id:'cornelia_letters', label:'A Shelf of Letters', x:0.210, y:0.38, type:'object', kind:'trivial', required:false,
+          content:{ title:"Cornelia's Letters",
+            text:"A shelf of scrolls in a neat, firm hand: copies of Cornelia's letters, to her sons, to friends, to scholars. Her Latin is so fine that teachers have their pupils copy it. A hundred years from now the orator Cicero will praise her letters, and a few lines of one still survive today.\n\nVery few words written by Roman women have come down to us at all. Hers are among them." } },
+
+        { id:'child_tablet', label:"A Child's Writing Tablet", x:0.775, y:0.86, type:'object', kind:'trivial', required:false,
+          content:{ title:"A Child's Writing Tablet",
+            text:"A small wax tablet dropped on the floor, covered in a child's wobbly letters: A B C D E F G H I K L M, and then, very proudly, ROMA.\n\nRomans write with a stylus, a pointed stick of bronze or bone, scratching letters into a thin layer of wax. Turn the stylus round and the flat end smooths the wax so you can start again. Rich children learn at home from a Greek slave tutor. Others go to a schoolmaster who teaches in a rented shop with a curtain across the front, and is quick with the cane." } }
       ]
     },
 
@@ -1710,7 +1808,22 @@ const GAME_DATA = {
 
         { id:'moon_stars', label:'The Moon', x:0.620, y:0.08, type:'object', kind:'trivial', required:false,
           content:{ title:'The Moon',
-            text:"A waning moon over the Palatine. Some of the country men are reading the stars to guess the hour. They have been doing it all their lives, for planting and for harvest, and they are never more than a little wrong." } }
+            text:"A waning moon over the Palatine. Some of the country men are reading the stars to guess the hour. They have been doing it all their lives, for planting and for harvest, and they are never more than a little wrong." } },
+
+        { id:'tertia_vigil', label:'Tertia', x:0.370, y:0.70, type:'dialogue', kind:'clue', required:false,
+          content:{ title:'Tertia',
+            people:['Tertia'],
+            desc:"The water girl from the Subura, out of breath, weaving between the sleepers.",
+            lines:[
+              "Arrius has had me running all night, courtyard to courtyard: which tribes are in, who's still on the road.",
+              "Pollia is short. I told him. He swore by Hercules. Then he gave me a copper anyway.",
+              "My mother thinks I'm asleep. I'll be back before she wakes up. Probably.",
+              "Tomorrow I'm going to climb the wall by the Capitol steps and watch the whole thing. Nobody looks at a girl on a wall."
+            ] } },
+
+        { id:'dark_street', label:'The Dark Street', x:0.200, y:0.30, type:'object', kind:'trivial', required:false,
+          content:{ title:'The Dark Street',
+            text:"Away from the fires, the street is black. Rome has no street lamps, and no police force at all. People who can afford it go out at night with slaves carrying torches. Everyone else stays home and bars the door.\n\nIf there is trouble, a Roman calls on his family, his friends, his clients and his neighbours. That is all the protection there is. Tonight the tribune's friends are his only guard. Tomorrow the senators will bring theirs." } }
       ]
     },
 
@@ -1769,7 +1882,20 @@ const GAME_DATA = {
 
         { id:'dawn', label:'First Light', x:0.920, y:0.24, type:'object', kind:'ambiance', required:false,
           content:{ title:'First Light',
-            text:"Grey light behind the hills to the east. Down on the open ground before the Temple of Jupiter, the first of the crowd is arriving: Arrius' country men, tribe by tribe, carrying nothing but their cloaks. In an hour the Assembly will be called. In an hour the Senate will meet in here.\n\nYour report is due." } }
+            text:"Grey light behind the hills to the east. Down on the open ground before the Temple of Jupiter, the first of the crowd is arriving: Arrius' country men, tribe by tribe, carrying nothing but their cloaks. In an hour the Assembly will be called. In an hour the Senate will meet in here.\n\nYour report is due." } },
+
+        { id:'priest_things', label:"The Chief Priest's Things", x:0.645, y:0.68, type:'object', kind:'trivial', required:false,
+          content:{ title:"The Chief Priest's Things",
+            text:"Laid out at the end of the table: a long-handled bronze ladle for pouring wine at a sacrifice, a sacrificial knife with an ivory handle, and a folded toga.\n\nYour patron is Pontifex Maximus, the head of Rome's priests. Roman priests are not a separate class of holy men. They are senators and politicians who also perform the state's sacrifices, read the omens, and keep the calendar. When a Roman sacrifices, he pulls a fold of his toga up over his head." } },
+
+        { id:'fannia', label:'A Woman at the Door', x:0.860, y:0.60, type:'dialogue', kind:'ambiance', noPoi:true, required:false,
+          content:{ title:'Fannia',
+            desc:"A woman in a dark stola and veil, holding a little honey cake and a pinch of incense, waiting for the temple doors to open.",
+            lines:[
+              "I come at dawn to pray for my son. He votes today, for the first time. His father made him promise to vote as our patron tells him. He made me no promises at all.",
+              "You think women don't matter in this? Sixty years ago, our grandmothers filled every street to the Forum, day after day, and stood outside the senators' doors until they repealed the law that forbade women to wear gold or ride in carriages. Old Cato made a speech against us. We won anyway.",
+              "We cannot vote. But no man in Rome gets to the Assembly without walking out of some woman's door in the morning."
+            ] } }
       ]
     }
 
@@ -1858,6 +1984,9 @@ const GAME_DATA = {
       'Herius the Marsian':     { text:"Herius the Marsian had opposed the law. The consuls' court did not care. He was not a Roman citizen, so they could not try him, and he went back to his mountains with a story about how Rome treats its allies. Forty years later, the Marsians would lead the allies in a war against Rome to win the right to vote." },
       'Titus Calvus':           { text:"You named Titus Calvus. Your patron only smiled. Calvus had been his man all along. He got his farm: thirty iugera of public land, on the Via Tiburtina." },
       'Hermon the Steward':     { text:"Your patron read Hermon's name twice. The old steward who had been kind to you when you were small, who had told you where to look, was sold to a dealer before the month was out. He never knew who had named him." },
+      'Tertia':                 { text:"Tertia was eleven, and the consuls' court did not try children. But Arrius' messenger had a name now. The rent collector put her family out of the courtyard, and in the next tenement nobody would let her carry messages for anyone again." },
+      'Philumena':              { text:"Philumena belonged to your patron. Within the month she was sold away from the estate, away from Damon, and away from her children." },
+      'Sempronia':              { text:"Your patron set his cousin's name aside. When her husband, Scipio Aemilianus, heard in Spain of her brother's death, he quoted a line of Homer: 'So perish anyone else who does such deeds.' She went on living in his house." },
       'Publius Satureius':      { text:"You named Publius Satureius. Your patron laughed out loud. Satureius struck the first blow, and was proud of it all his life." }
     },
     fateDefault: '{name} was questioned by the consuls’ court within the year.',
@@ -1869,6 +1998,8 @@ const GAME_DATA = {
       codas: [
         { person:'Quintus Arrius', when:'strike', text:"Quintus Arrius received thirty iugera of land in the Sabine hills, two valleys over from the farm he had lost. The boundary stone at its corner carried the name of C. Sempronius Gracchus. He carved his own name under it, which was against the law, and nobody ever made him take it off." },
         { person:'Naevia', when:'strike', text:"Naevia's son received his lot when he came of age: a farm he could never be made to sell. He was enrolled in the census, and in time called up for the legions." },
+        { person:'Tertia', when:'strike', text:"Tertia climbed the wall by the Capitol steps that morning and saw everything. She never forgot it. Years later she told her own daughters, and they told theirs." },
+        { person:'Tertia', when:'broken', text:"Tertia climbed the wall by the Capitol steps that morning and saw everything. She never forgot it, and she never told anyone who had given the consuls their names." },
         { person:'Old Tullus', when:'strike', text:"When the surveyors came to the Via Tiburtina, they cut the great estate down to its lawful size. Old Tullus lived to see new farmhouses go up on either side of his seven iugera, and children in the fields who were not wearing chains." }
       ]
     },
@@ -1900,7 +2031,7 @@ const GAME_DATA = {
     },
 
     history: {
-      intro: "Regnum is historical fiction. You, Hermon, Arrius, Naevia, Old Tullus, Syrus, Calvus and the other ordinary people are invented. Tiberius and Gaius Gracchus, Cornelia, Claudia, Scipio Nasica, Quintus Pompeius, Marcus Octavius, Blossius, Diophanes, Gaius Villius, Mucius Scaevola and Publius Satureius were real, and nearly everything the game says they did comes from the ancient sources.",
+      intro: "Regnum is historical fiction. You, Hermon, Phoebe, Arrius, Naevia, Tertia, Old Tullus, Philumena, Syrus, Fannia, Calvus and the other ordinary people are invented. Tiberius and Gaius Gracchus, Cornelia, Sempronia, Claudia and her sister the Vestal Claudia, Scipio Nasica, Quintus Pompeius, Marcus Octavius, Blossius, Diophanes, Gaius Villius, Mucius Scaevola and Publius Satureius were real, and nearly everything the game says they did comes from the ancient sources.",
       items: [
         { title:'Public Land', text:"As Rome conquered Italy it took land from the defeated and made it ager publicus, public land belonging to the Roman People. Much of it was rented out or simply occupied, and over generations the rich gathered huge holdings, often worked by slaves. An old law limited any one person to 500 iugera (about 310 acres), but nobody enforced it." },
         { title:'The Law of Tiberius Gracchus', text:"In 133 BC Tiberius, as tribune of the plebs, passed a law to enforce that limit, with an allowance for sons, and to give the surplus to poor citizens in small lots that could not be sold. A commission of three men, Tiberius, his brother Gaius, and his father-in-law Appius Claudius, was set up to do it. Boundary stones carved with the commissioners' names have been found in southern Italy." },
@@ -1911,6 +2042,7 @@ const GAME_DATA = {
         { title:'The Hand to the Head', text:"According to Plutarch, on the day of the vote Tiberius could not make himself heard over the crowd, so he touched his head to show that his life was in danger. His enemies told the Senate he was asking for a crown. The agreed signal you hear about from Villius is the game's invention, but the gesture and its two readings come from Plutarch." },
         { title:'The Killing on the Capitol', text:"When the consul Mucius Scaevola refused to use force, Scipio Nasica, the Pontifex Maximus, led senators and their attendants up the Capitol. Tiberius and about three hundred supporters were beaten to death with clubs and broken benches, and their bodies thrown into the Tiber. The next year a special court tried his followers; Diophanes was executed, and Plutarch tells the story of Gaius Villius and the vipers. Nasica was sent to Asia and died at Pergamum." },
         { title:'Gaius Gracchus', text:"Ten years later Gaius Gracchus became tribune and went further than his brother: subsidised grain for the city poor, new colonies, new courts, and a proposal to extend citizenship to Rome's Latin allies. In 121 BC the Senate passed its first 'final decree' and the consul Lucius Opimius attacked Gaius and his followers on the Aventine. Gaius died, and about three thousand others were killed or executed." },
+        { title:'Roman Women', text:"Roman women could not vote or hold office, and most married in their early teens. But they were not silent. In 195 BC women crowded the Forum for days until the Senate repealed the Oppian law that limited their gold and carriages. A Vestal Virgin named Claudia really did ride in her father's triumphal chariot in 143 BC so that no tribune could pull him down. Cornelia, the mother of the Gracchi, was admired for centuries for her learning and her letters, and Plutarch says her ambitions pushed her sons forward. Women like Naevia, Tertia and Philumena left almost no trace in the sources, which is exactly why the game imagines them." },
         { title:'Whose Story?', text:"Almost everything we know about the Gracchi was written long after they died, mostly by Plutarch and Appian, both Greeks writing under the emperors more than two hundred years later. They drew on earlier writers who were partisans on one side or the other. Historians still argue about whether the brothers were idealists, ambitious nobles, or both. The question you were sent to answer, whether Tiberius meant to make himself king, was argued in Rome for generations." }
       ]
     },
@@ -1921,13 +2053,13 @@ const GAME_DATA = {
       { title:'Soldiers Without Farms', text:"Men who fought Rome's wars for years and came home to find their farms gone.",
         ids:['tiberius','rustics','arrius','naevia','census_tablet','gnaeus'] },
       { title:'Slaves on Italian Soil', text:"Captives from Rome's wars, working the land in chains, and the revolt in Sicily that frightened every estate owner in Italy.",
-        ids:['chain_gang','ergastulum','syrus','grain_jar'] },
+        ids:['chain_gang','ergastulum','syrus','vilica','grain_jar'] },
       { title:'Not Everyone Gained', text:"The allies who farmed public land but could not vote, and the money from Pergamum that both sides wanted.",
         ids:['herius','philo','temple_saturn'] },
       { title:'Real Reasons to Worry', text:"A tribune deposed, the Senate bypassed, a second term sought. The tribune's opponents had real arguments, too.",
-        ids:['curia','octavius_bench','octavius','diophanes','scaevola'] },
+        ids:['curia','octavius_bench','octavius','diophanes','sempronia','scaevola'] },
       { title:'The Movement', text:"Who stood with the tribune, what they wanted, and where and when they meant to vote.",
-        ids:['scribes','gaius','cornelia','blossius','claudia','tribe_lists','arrius_vigil','tiberius_door','villius','naevia_vigil'] },
+        ids:['scribes','gaius','cornelia','blossius','claudia','tribe_lists','tertia','arrius_vigil','tertia_vigil','tiberius_door','villius','naevia_vigil'] },
       { title:'How a Crown Is Made', text:"A diadem nobody found, a chest full of paper, and a gesture that meant two different things.",
         ids:['pergamum_chest','imagines','pompeius_tablet'] },
       { title:'What Your Patron Was Hiding', text:"The land he stood to lose, the informer he paid, the witness he needed, and the clubs.",

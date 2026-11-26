@@ -237,11 +237,26 @@ def crowd(x0, x1, feet, h, n, seed=1, dark=0.0, tones=None):
         t = rnd.choice(tones)
         out.append(person(cx, feet + rnd.random() * 10, hh, skin=rnd.choice(SKINS), robe=t,
                           toga='#efe8d8' if rnd.random() < 0.25 else None, hair=rnd.choice(HAIR),
-                          beard=rnd.random() < 0.3, facing=rnd.choice([1, -1]), female=rnd.random() < 0.15,
+                          beard=rnd.random() < 0.3, facing=rnd.choice([1, -1]), female=rnd.random() < 0.38,
                           arm=rnd.choice(['down', 'down', 'out', 'raise'])))
     if dark:
         out.append(rect(x0 - 60, feet - h * 1.1, x1 - x0 + 120, h * 1.15, '#000', None, op=0))
     return g(out, f'opacity="{1 - dark:.2f}"')
+
+def water_girl(hx, hy, h=250, facing=1):
+    feet = Y(hy) + 0.62 * h
+    out = person(X(hx), feet, h, skin='#d9a679', robe='#b8865a', hair='#3d2a1a', female=True, arm='head', facing=facing)
+    top = feet - h
+    out += amphora(X(hx), top + 4, h * 0.32, '#c8743f')
+    return out
+
+def fasces(x, y, h=150):
+    out = [rect(x - 14, y - h, 28, h, '#a8865a', INK, 2.5)]
+    for i in range(1, 3):
+        out.append(line(x - 14 + i * 9, y - h + 4, x - 14 + i * 9, y - 4, '#7a5a3a', 2))
+    for k in range(4):
+        out.append(line(x - 15, y - h + 20 + k * 36, x + 15, y - h + 30 + k * 36, '#a02020', 4))
+    return ''.join(out)
 
 # ------------------------------------------------------------------ architecture
 def column(x, top, bot, w, fill='#e8dcc0', order='doric', shade='#c9b998'):
@@ -506,6 +521,22 @@ def scene_nasica_atrium(P):
     # Daos on his stool
     b.append(person(X(P['daos'][0]), 900, 400, skin='#b07850', robe='#8a7a60', hair='#c9c4bc', beard=True, seated=True, facing=-1))
     b.append(path(f'M{X(P["daos"][0]) - 40},{880} q-40,30 -100,10', 'none', '#6a6a6a', 4))
+    # mirror
+    mx2, my2 = X(P['mirror'][0]), Y(P['mirror'][1])
+    b.append(line(mx2, my2 + 20, mx2, 920, '#7a5230', 6) + line(mx2 - 40, 920, mx2 + 40, 920, '#7a5230', 6))
+    b.append(circ(mx2, my2 - 20, 46, '#c8a050', INK, 3) + circ(mx2 - 10, my2 - 30, 18, '#f0d890', None, op=0.6))
+    # loom
+    lx2, ly2 = X(P['loom'][0]), Y(P['loom'][1])
+    b.append(line(lx2 - 80, ly2 - 200, lx2 - 80, 920, '#6b4a2b', 10) + line(lx2 + 80, ly2 - 200, lx2 + 80, 920, '#6b4a2b', 10))
+    b.append(line(lx2 - 95, ly2 - 190, lx2 + 95, ly2 - 190, '#6b4a2b', 10))
+    b.append(rect(lx2 - 70, ly2 - 180, 140, 190, '#d8b880', INK, 1.5))
+    for i in range(14):
+        b.append(line(lx2 - 66 + i * 10, ly2 - 180, lx2 - 66 + i * 10, ly2 + 60, '#a08050', 1.5))
+        b.append(circ(lx2 - 66 + i * 10, ly2 + 66 + (i % 2) * 10, 6, '#a0603a', INK, 1))
+    for i in range(6):
+        b.append(line(lx2 - 70, ly2 - 160 + i * 28, lx2 + 70, ly2 - 160 + i * 28, '#9a3a2a', 4))
+    # Phoebe the nurse
+    b.append(auto_person(P['phoebe'][0], P['phoebe'][1], skin='#c98f63', robe='#8a6a5a', hair='#c9c4bc', female=True, arm='both', facing=1))
     return finish(''.join(b), '#7ab0e0', '#cfe6f5')
 
 def scene_forum_day(P):
@@ -578,6 +609,17 @@ def scene_forum_day(P):
     b.append(rect(tx + 30, ty - 30, 90, 20, '#f3eee2', INK, 2, op=0.0))
     # Octavius
     b.append(auto_person(P['octavius'][0], P['octavius'][1], skin='#d9a679', robe='#efe8d8', toga='#f3eee2', stripe='#7a1a2a', hair='#5a4030', facing=-1))
+    # sundial on its pillar
+    dx4, dy4 = X(P['sundial'][0]), Y(P['sundial'][1])
+    b.append(rect(dx4 - 24, dy4 + 20, 48, 700 - dy4 - 20, '#e8dcc0', INK, 3))
+    b.append(path(f'M{dx4 - 60},{dy4 + 20} Q{dx4},{dy4 - 50} {dx4 + 60},{dy4 + 20} Z', '#efe6d0', INK, 3))
+    for a in range(-60, 61, 20):
+        b.append(line(dx4, dy4 + 18, dx4 + a * 0.8, dy4 - 10 - (60 - abs(a)) * 0.3, '#5a4a30', 1.5))
+    b.append(line(dx4, dy4 + 18, dx4 + 30, dy4 - 30, INK, 4))
+    # the Vestal, with her lictor
+    b.append(auto_person(P['vestal'][0], P['vestal'][1], skin='#e8c09a', robe='#f8f4ec', hair='#3d2a1a', female=True, arm='down', facing=1))
+    b.append(person(X(P['vestal'][0]) + 150, 905, 380, skin='#c98f63', robe='#a02a2a', hair='#2b1d14', arm='out', facing=1))
+    b.append(fasces(X(P['vestal'][0]) + 215, 770, 140))
     # Lacus Curtius
     lx, ly = X(P['lacus_curtius'][0]), Y(P['lacus_curtius'][1])
     b.append(ell(lx, ly, 150, 40, '#a89878', INK, 3))
@@ -600,6 +642,20 @@ def scene_forum_day(P):
         b.append(rect(phx - 180 + i * 24, phy + 60 - i * 3, 18, 30 + i * 3, '#c8a040', INK, 1.5))
     b.append(line(phx - 50, phy + 20, phx - 50, phy + 90, INK, 3) + line(phx - 90, phy + 30, phx - 10, phy + 30, INK, 3))
     b.append(path(f'M{phx - 100},{phy + 50} q10,14 20,0 Z', '#c8a040', INK, 2) + path(f'M{phx - 20},{phy + 50} q10,14 20,0 Z', '#c8a040', INK, 2))
+    # stands for the games
+    sx3, sy3 = X(P['stands'][0]), Y(P['stands'][1])
+    for i in range(6):
+        b.append(rect(sx3 - 120 + i * 12, sy3 - 90 + i * 50, 240 - i * 24 + 60, 14, '#9a7048', INK, 2))
+    for dx in (-110, 0, 110):
+        b.append(line(sx3 + dx, sy3 - 90, sx3 + dx, 660, '#7a5230', 6))
+    for i in range(4):
+        b.append(line(sx3 - 130 + i * 90, sy3 - 90, sx3 - 60 + i * 90, 660, '#7a5230', 3))
+    # lictors
+    lx3, ly3 = X(P['lictors'][0]), Y(P['lictors'][1])
+    for i, dx in enumerate((-110, 0, 110)):
+        fx3 = lx3 + dx
+        b.append(person(fx3, ly3 + 190, 330, skin=SKINS[i], robe='#a02a2a', hair=HAIR[i], arm='out', facing=1))
+        b.append(fasces(fx3 + 60, ly3 + 20, 150))
     # man on a barrel
     crx, cry = X(P['crier'][0]), Y(P['crier'][1])
     b.append(ell(crx, Y(0.88), 70, 20, '#7a5230', INK, 3) + rect(crx - 70, Y(0.72), 140, Y(0.88) - Y(0.72), '#8a6038', INK, 3) +
@@ -611,7 +667,7 @@ def scene_forum_day(P):
     b.append(ell(cpx, cpy - 10, 40, 10, '#f09030', None, op=0.7))
     for i in range(10):
         b.append(circ(cpx - 30 + (i * 7) % 60, cpy - 6 - (i % 3) * 3, 5, '#d8b060', INK, 1))
-    b.append(person(cpx + 90, 990, 260, skin='#c98f63', robe='#a08060', hair='#2b1d14', arm='out', facing=-1))
+    b.append(person(cpx + 90, 990, 260, skin='#c98f63', robe='#b8865a', hair='#2b1d14', female=True, arm='out', facing=-1))
     return finish(''.join(b), '#6fa8dc', '#e6f0f5')
 
 def scene_subura_insula(P):
@@ -655,7 +711,7 @@ def scene_subura_insula(P):
         b.append(rect(kx - 20 + i * 14, ky + 50, 10, 8, '#efe6d0', INK, 1))
     # Arrius at his table, the tablets, a queue
     ax, ay = X(P['arrius'][0]), Y(P['arrius'][1])
-    b.append(crowd(X(0.60), X(0.69), 800, 330, 4, seed=12, tones=['#7a5a3a', '#8a6a48', '#6b5a48', '#9a7a58']))
+    b.append(crowd(X(0.585), X(0.64), 800, 330, 2, seed=12, tones=['#7a5a3a', '#8a6a48', '#6b5a48', '#9a7a58']))
     b.append(auto_person(P['arrius'][0], P['arrius'][1], skin='#b07850', robe='#8a5a40', hair='#8a8580', beard=True, arm='out', facing=1, hold='tablet'))
     tx, ty = X(P['tribe_lists'][0]), Y(P['tribe_lists'][1])
     b.append(table(ax + 30, tx + 120, ty + 20, 960))
@@ -679,6 +735,24 @@ def scene_subura_insula(P):
     b.append(line(wx, wy - 130, wx, wy + 10, '#8ab8d8', 6))
     b.append(rect(wx - 120, wy + 10, 240, 90, '#cdbf9f', INK, 3) + rect(wx - 110, wy + 14, 220, 20, '#8ab8d8', None))
     b.append(rect(wx - 30, wy + 100, 60, 290, '#bcae8e', INK, 3))
+    # Tertia
+    b.append(water_girl(P['tertia'][0], P['tertia'][1], 270, facing=-1))
+    # hot-food counter in a shop opening
+    fx5, fy5 = X(P['food_counter'][0]), Y(P['food_counter'][1])
+    b.append(rect(fx5 - 140, fy5, 280, 150, '#cdbf9f', INK, 3))
+    for dx in (-80, 0, 80):
+        b.append(ell(fx5 + dx, fy5, 32, 10, '#7a3a1d', INK, 2))
+        b.append(path(f'M{fx5 + dx - 10},{fy5 - 14} q10,-25 0,-50', 'none', '#ffffff', 4, 0.6))
+    b.append(person(fx5, fy5 + 10, 260, skin='#b07850', robe='#8a5a40', hair='#2b1d14', female=True, arm='both', facing=1))
+    b.append(rect(fx5 - 140, fy5, 280, 150, '#cdbf9f', INK, 3))
+    for dx in (-80, 0, 80):
+        b.append(ell(fx5 + dx, fy5, 32, 10, '#7a3a1d', INK, 2))
+    # chamber pot from a window
+    cx5, cy5 = X(P['chamber_pot'][0]), Y(P['chamber_pot'][1])
+    b.append(rect(cx5 - 30, cy5 - 50, 60, 64, '#2a1e16', INK, 3))
+    b.append(circ(cx5 - 4, cy5 - 30, 18, '#d9a679', INK, 2) + path(f'M{cx5 - 22},{cy5 - 40} q22,-30 40,0', '#3d2a1a', INK, 2))
+    b.append(path(f'M{cx5 + 10},{cy5 + 4} l40,12 l-10,26 l-36,-8 Z', '#b5653a', INK, 2))
+    b.append(path(f'M{cx5 + 30},{cy5 + 40} q10,60 -6,140', 'none', '#b8a050', 8, 0.7))
     return finish(''.join(b), '#a8c8e0', '#e6ddc8')
 
 def scene_tiburtina_estate(P):
@@ -754,6 +828,12 @@ def scene_tiburtina_estate(P):
     for i, (dx, dy) in enumerate(((-260, 260), (-170, 290), (-90, 250), (120, 280), (200, 260), (-210, 330))):
         b.append(sheep(sx + dx, sy + dy, 1.1))
     b.append(auto_person(P['syrus'][0], P['syrus'][1], skin='#c98f63', robe='#b0a080', hair='#1a1410', hold='crook', arm='out', facing=-1))
+    # Philumena with her basket
+    b.append(auto_person(P['vilica'][0], P['vilica'][1], skin='#c98f63', robe='#8a6a5a', hair='#2b1d14', female=True, arm='out', facing=-1))
+    vx6, vy6 = X(P['vilica'][0]), Y(P['vilica'][1])
+    b.append(ell(vx6 - 95, vy6 + 70, 50, 20, '#b08a50', INK, 2) + rect(vx6 - 145, vy6 + 70, 100, 40, '#b08a50', INK, 2))
+    for i in range(3):
+        b.append(circ(vx6 - 125 + i * 30, vy6 + 62, 14, '#d8a860', INK, 1.5))
     # road and Herius with mules
     b.append(path(f'M{X(0.86)},1000 Q{X(0.93)},700 {X(0.99)},560 L{W},560 L{W},1000 Z', '#bca88a', INK, 3))
     for i in range(10):
@@ -817,6 +897,14 @@ def scene_gracchus_house(P):
     for i in range(1, 3):
         b.append(line(fx - 110, fy - 30 + i * 30, fx + 110, fy - 30 + i * 30, '#7a6a50', 1.5))
     b.append(rect(fx + 40, fy, 60, 50, 'none', '#c02020', 3))
+    # Cornelia's letters
+    lx7, ly7 = X(P['cornelia_letters'][0]), Y(P['cornelia_letters'][1])
+    b.append(rect(lx7 - 110, ly7 + 30, 220, 14, '#6b4a2b', INK, 3))
+    for i in range(7):
+        b.append(rect(lx7 - 100 + i * 30, ly7 - 30, 24, 60, '#efe2c0', INK, 2, rx=6))
+    b.append(text(lx7, ly7 + 70, 'EPISTVLAE', 14, '#5a3a22', ls=3))
+    # Sempronia in the garden doorway
+    b.append(auto_person(P['sempronia'][0], P['sempronia'][1] + 0.08, skin='#e0b48c', robe='#4a6a7a', hair='#3d2a1a', female=True, seated=True, facing=-1, k=0.47))
     # Gaius with the groma
     b.append(auto_person(P['gaius'][0], P['gaius'][1], skin='#e0b48c', robe='#efe8d8', hair='#3d2a1a', arm='out', hold='groma', facing=-1))
     # Blossius
@@ -844,6 +932,12 @@ def scene_gracchus_house(P):
         a = i * math.pi / 4
         b.append(line(px, py + 30, px + 26 * math.cos(a), py + 30 + 26 * math.sin(a), '#e8c040', 4))
     b.append(circ(px - 40, py - 62, 12, '#efe2c0', INK, 1.5) + circ(px + 20, py - 64, 12, '#efe2c0', INK, 1.5))
+    # child's writing tablet
+    tx7, ty7 = X(P['child_tablet'][0]), Y(P['child_tablet'][1])
+    b.append(poly([(tx7 - 70, ty7 - 20), (tx7 + 60, ty7 - 30), (tx7 + 76, ty7 + 14), (tx7 - 54, ty7 + 24)], '#a7804a', INK, 2))
+    b.append(poly([(tx7 - 60, ty7 - 14), (tx7 + 54, ty7 - 23), (tx7 + 66, ty7 + 9), (tx7 - 46, ty7 + 17)], '#3d2f1c', None))
+    b.append(text(tx7 + 4, ty7 + 4, 'ABCDEF ROMA', 15, '#e8d8b0', ls=1, rot=-4))
+    b.append(line(tx7 + 80, ty7 + 20, tx7 + 140, ty7 - 10, '#b08a40', 5))
     # Claudia and the boy
     b.append(auto_person(P['claudia'][0], P['claudia'][1], skin='#e0b48c', robe='#8a5a5a', hair='#3d2a1a', female=True, arm='out', facing=-1))
     b.append(person(X(P['claudia'][0]) - 80, 960, 200, skin='#e0b48c', robe='#efe8d8', hair='#3d2a1a', arm='raise', facing=1))
@@ -896,6 +990,9 @@ def scene_vigil_night(P):
     b.append(path(f'M{hmx - 50},{hmy + 30} Q{hmx - 55},{hmy - 50} {hmx},{hmy - 55} Q{hmx + 55},{hmy - 50} {hmx + 50},{hmy + 30} Z', '#8a7a50', INK, 3))
     b.append(line(hmx, hmy - 55, hmx, hmy - 90, '#a02020', 10))
     b.append(path(f'M{hmx + 40},{hmy + 30} q30,-10 50,10 q-20,10 -40,0', 'none', '#4a6a3a', 5))
+    b.append(water_girl(P['tertia_vigil'][0], P['tertia_vigil'][1], 270, facing=1).replace('#b8865a', '#6a5a48'))
+    lx8, ly8 = X(P['dark_street'][0]), Y(P['dark_street'][1])
+    b.append(rect(lx8 - 70, ly8 - 60, 140, 150, '#120c08', INK, 3) + line(lx8 - 70, ly8 - 10, lx8 + 70, ly8 - 10, '#3a2a20', 6) + line(lx8 - 70, ly8 + 40, lx8 + 70, ly8 + 40, '#3a2a20', 6))
     # Villius, Calvus, Naevia
     b.append(auto_person(P['villius'][0], P['villius'][1], skin='#c98f63', robe='#6a5a48', hair='#2b1d14', beard=True, arm='head', facing=-1))
     b.append(auto_person(P['calvus'][0], P['calvus'][1], skin='#e0b48c', robe='#b8a888', hair='#5a4030', arm='raise', hold='cup', facing=-1))
@@ -958,10 +1055,16 @@ def scene_fides_night(P):
     b.append(poly([(lx - 70, ly - 50), (lx + 60, ly - 56), (lx + 74, ly - 34), (lx - 56, ly - 28)], '#7a2a1a', INK, 2))
     b.append(rect(lx + 80, Y(0.62), 16, Y(0.73) - Y(0.62), '#c8a040', INK, 2) + ell(lx + 88, Y(0.615), 26, 10, '#c8a040', INK, 2) + ell(lx + 100, Y(0.595), 10, 18, '#ffd070', None))
     b.append(poly([(lx - 230, Y(0.73)), (lx - 120, Y(0.725)), (lx - 110, Y(0.705)), (lx - 220, Y(0.71))], '#efe8d8', INK, 2))
+    # the chief priest's things
+    qx, qy = X(P['priest_things'][0]), Y(P['priest_things'][1])
+    b.append(line(qx - 60, qy + 20, qx + 40, qy - 40, '#b08a40', 5) + ell(qx + 46, qy - 44, 14, 10, '#b08a40', INK, 2))
+    b.append(line(qx - 40, qy + 34, qx + 40, qy + 26, '#e8e0d0', 6) + line(qx + 40, qy + 26, qx + 80, qy + 22, '#c0c0c8', 4))
     # Satureius with a bench leg
     b.append(auto_person(P['satureius'][0], P['satureius'][1], skin='#d9a679', robe='#efe8d8', toga='#f3eee2', hair='#2b1d14', arm='out', hold='club', facing=-1))
     # slaves carrying in staves, silhouettes
     b.append(person(X(0.76), 900, 360, skin='#8d5a3b', robe='#5a3a3a', hair='#1a1410', arm='both', hold='club', facing=-1))
+    # Fannia at the door, against the dawn
+    b.append(chest_person(P['fannia'][0], P['fannia'][1], 380, skin='#e0b48c', robe='#4a3a4a', hair='#2b1d14', female=True, arm='out', facing=-1))
     # geese
     gx, gy = X(P['sacred_geese'][0]), Y(P['sacred_geese'][1])
     for i in range(0, 7):

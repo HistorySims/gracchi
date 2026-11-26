@@ -30,6 +30,9 @@ Three verdicts lead to three epilogues: swear he seeks a crown, tell your patron
 
 ## Classroom notes
 
+- **Everyday Rome.** Every scene has hotspots that build background knowledge: togas and the bulla, Roman names and why every daughter is Cornelia or Claudia, Vestal Virgins, lictors and fasces, a wrong sundial, gladiator stands, wax tablets and school, hot-food counters, chamber pots, roads and Roman numerals, olive oil and the strigil, the lack of police and street lights.
+- **Women and girls have voices.** Phoebe the nurse, Claudia the Vestal, Naevia the widow, Tertia (an 11-year-old water carrier who runs messages for the movement), Philumena the enslaved vilica, Cornelia, her daughter Sempronia, Claudia the tribune's wife, and Fannia the matron, who remembers the women's protest of 195 BC. Tertia, Naevia, Philumena, Cornelia, Sempronia and Claudia can be named in the ending, and the history page has a section on Roman women.
+
 - **Herrings** (the diadem, the Etruscan army, vote-buying, the Stoic scroll, the golden crown, the loud man) are debunked on the review screen at the end.
 - **Real Reasons to Worry** is its own review category. The deposition of Octavius, the second tribunate, and the Pergamum money were real objections, and the game says so.
 - The **History Behind the Story** screen separates invented characters from real ones. It also flags the one invented detail in the hand-to-the-head scene: Plutarch reports the gesture, but the pre-arranged signal is the game's invention.
@@ -48,29 +51,16 @@ python3 tools/make_art.py
 
 To replace a scene with a painted panorama, as in the Pinkerton game:
 
-1. Generate a wide image, about **3.2 : 1** (e.g. 1600 × 500), using the brief below.
+1. Give Gemini the reference image from `gemini/` and its prompt from `gemini/GEMINI_PROMPTS.md`.
 2. Put it in `art/` and change that scene's `image:` in `index.html` to the new file.
 3. Open the game, press the **gear** (top left), pick the scene, and tap each hotspot's spot as it asks. Use **Copy All** and paste the new `x`/`y` values back into `index.html`.
 
-The brief lists objects left to right, roughly in the order the hotspots expect.
-
-**1. House of Scipio Nasica (atrium).** Roman atrium, 2nd century BC, warm daylight through a square roof opening onto a shallow marble rain pool. Walls painted to look like coloured marble blocks over a deep red dado. Left to right: a painted household shrine with two dancing Lares and a snake; four wooden cupboards of wax ancestor masks; a dark study (tablinum) with scroll shelves, a tall grey-haired senator in a toga with a purple stripe in front of it, gesturing; a long table with wax tablets (one tied with red cord and a seal); the rain pool between two columns; a balding senator holding a silver cup; an older Greek steward with a beard and tablets; a small table with a silver dish of figs; a leather satchel on the floor; an old doorkeeper slave on a stool by the bright street door.
-
-**2. The Forum Romanum.** Sunny midsummer. Left to right: the brick Senate house with bronze doors; a columned portico with charcoal graffiti (TI GRACCHE REDDE AGRVM PVBLICVM PAVPERIBVS); the speakers' platform decorated with bronze ship-rams, a young tribune in a white toga speaking with one arm raised; the tribunes' wooden bench at its foot; a serious senator standing apart; the Palatine hill with houses behind; three sunburned country men in brown tunics; the Temple of Castor; a Greek money-changer at a table with scales and coins; the Ionic Temple of Saturn; a red-faced man shouting from a barrel; a small fenced patch of old paving in the foreground; a boy roasting chickpeas over a brazier; a city gate arch at the far right.
-
-**3. The Subura.** A courtyard surrounded by a five-storey brick-and-timber tenement, washing on balconies, shops on the ground floor. Left to right: an alley exit; a small crossroads shrine hung with wool dolls; a widow in a doorway spinning wool on a drop spindle, a 12-year-old boy beside her; a tall empty clay grain jar; three small children playing knucklebones in the dirt; a scarred grey veteran at a table writing on wax tablets, a queue of country men; a big crack in the wall propped with timbers above; a heavy rent collector with a stick and ledger; a sly man leaning on a post; a fuller's shop with men treading cloth in vats; a stone public fountain with a lead pipe.
-
-**4. The Via Tiburtina estate.** Golden afternoon in the Roman countryside, blue mountains behind. Left to right: an old farmer with a hoe at a crooked fence by an olive tree and bean rows; a small ruined mud-brick farmhouse with a collapsed roof; rows of vines on stakes with a small stone family tomb among them; a squat boundary stone in the foreground with a scrape mark where it was moved; a slave overseer in a good blue tunic with a whip; a line of chained field slaves hoeing; a long low stone slave barracks with high slit windows; a white villa with a colonnade on a hill among cypresses; a young Syrian shepherd with a crook and a flock of sheep; a muleteer leading pack mules down a paved road; a Roman milestone at the far right.
-
-**5. House of the Gracchi.** A busy, lived-in Roman house in afternoon light, an open peristyle garden in the middle. Left to right: the street door, open, crowds visible outside; a dignified grey-haired woman in a high-backed chair reading a scroll (Cornelia); a small side table with an empty ivory jewel box; scribes at a long table copying wax tablets, baskets of tablets on the floor; a large linen survey map gridded into numbered lots, one block outlined in red; a young man of 21 with a surveyor's groma (measuring cross on a pole); a bearded Greek philosopher with a scroll; a reading stand with an open Greek scroll; a Greek speechwriter with a wax tablet; a gold crown shaped like city walls in a wall niche; a cedar chest bound in bronze with a star emblem; a young woman holding a small boy's hand by the doorway.
-
-**6. The Vigil.** Night street, stars and a crescent moon, firelight. Left to right: country men sleeping in cloaks around a small fire; a grizzled veteran with tablets counting heads; the lit doorway of a great house, a young man in a dark mourning toga holding a small boy by the hand, torches on either side; an old soldier's helmet on the step; a stocky man with his hand raised to his head; a big loud man with a cup, mid-shout; a widow on a doorstep with a sleeping boy in her lap; the Capitol at the far right with the Temple of Jupiter pale in the moonlight and a small lit temple below it.
-
-**7. The Temple of Fides.** Inside a temple portico before dawn, lamp-lit, the right side open to a grey-pink dawn sky over the Capitol. Left to right: an old consul seated alone by a bronze lamp; a bench with a wax tablet; a pile of wooden staves and sawn-off bench legs; a table with a sealed tablet and a red account book; a marble statue of the goddess Fides with her right hand held out; a tribune in a toga weighing a bench leg like a club; a slave carrying in more staves; a pen of white geese; the dawn sky with the Temple of Jupiter and a crowd gathering.
+`gemini/` has a reference image of every scene and `GEMINI_PROMPTS.md`, a prompt for each one that asks for a realistic repaint with the same layout.
 
 ## Files
 
 - `index.html`: the whole game, engine and story. Scenes, hotspots, and the ending text live in `GAME_DATA` near the top of the script.
 - `art/*.svg`: placeholder panoramas.
 - `tools/make_art.py`: regenerates the placeholder art from the hotspot positions.
+- `gemini/`: reference images and prompts for realistic repaints.
 - `tools/dump_scenes.js`: prints each scene's hotspot positions (used by `make_art.py`).
