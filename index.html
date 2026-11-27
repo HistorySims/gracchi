@@ -72,6 +72,14 @@ html, body {
   animation-play-state: paused;
   opacity: 1;
 }
+.hotspot.extra { width: 20px; height: 20px; }
+.hotspot.extra .hotspot-glow {
+  background: radial-gradient(circle, rgba(185,225,255,0.95) 0%, rgba(120,175,230,0.45) 55%, transparent 100%);
+}
+.hotspot.extra.found .hotspot-glow {
+  background: radial-gradient(circle, rgba(150,170,190,0.6) 0%, rgba(120,140,160,0.22) 55%, transparent 100%);
+}
+#evidence-card.is-extra .card-type-tag { color: #4a6f8f; }
 .hotspot.found .hotspot-glow {
   background: radial-gradient(circle, rgba(90,130,95,0.65) 0%, rgba(70,110,75,0.25) 55%, transparent 100%);
   animation-duration: 5s;
@@ -1151,8 +1159,9 @@ body.ending-mode #card-overlay { z-index: 160; }
 // GAME DATA: add future scenes here; engine reads generically
 // =============================================================
 // Developer tools: the gear (tune mode and scene jumper) and the Skip to the Forum shortcut.
-// Set to false before students play.
-const DEV_TOOLS = true;
+// Off for students. To turn them on, open the game with ?dev on the end of the address,
+// e.g. index.html?dev (or index.html?dev&tune to start straight in tuning mode).
+const DEV_TOOLS = /[?&]dev\b/.test(location.search);
 
 // Every non-navigation hotspot has a kind: 'clue', 'ambiance', 'trivial', or 'herring'.
 // Only clues count toward the case review; each herring carries a debunk shown there.
@@ -1160,9 +1169,6 @@ const GAME_DATA = {
 
   sceneOrder: ['nasica_atrium', 'forum_day', 'subura_insula', 'tiburtina_estate', 'gracchus_house',
                'vigil_night', 'fides_night'],
-
-  // The first scene is the briefing; its clues are left out of the case review count.
-  briefingScene: 'nasica_atrium',
 
   scenes: {
 
@@ -1243,7 +1249,8 @@ const GAME_DATA = {
             desc:"The old door slave, chained to his post by custom more than by iron. He grins at you.",
             lines:[
               "The master is waiting on you by the tablinum. Your tablets are on his table, by the pool.",
-              "You can look around by dragging left and right. Touch anything that catches your eye: people, objects, documents. Everything you learn goes into your notebook."
+              "You can look around by dragging left and right. Touch anything that catches your eye: people, objects, documents. Everything you learn goes into your notebook.",
+              "The golden lights are people and evidence. Those matter for your report. The pale blue lights are bits of everyday Roman life. Read them if you are curious, skip them if you are in a hurry."
             ] } },
 
         { id:'mirror', label:'A Bronze Mirror', x:0.110, y:0.78, type:'object', kind:'trivial', required:false,
@@ -1318,6 +1325,7 @@ const GAME_DATA = {
             ] } },
 
         { id:'rustics', label:'Men from the Country', x:0.555, y:0.66, type:'dialogue', kind:'clue', required:false,
+          grants:['knows_estate'],
           content:{ title:'Men from the Country',
             people:['Sextus Lollius'],
             desc:"A knot of sunburned men in rough brown tunics, dusty to the knees, eating bread out of their cloaks. Country men, not city men.",
@@ -1325,6 +1333,7 @@ const GAME_DATA = {
               "Two days on foot from Reate to get here. I am Sextus Lollius, tribe Quirina, and when they vote, my vote counts the same as a senator's, by Hercules.",
               "Only a man has to be here to cast it. That is the trouble. Every year the vote is at harvest, and every year the rich men's slaves bring in the harvest and the poor men have to choose: bring in their grain, or come to Rome and vote.",
               "Half my village stayed home this time. Can't eat a vote.",
+              "You want to see why we are poor? Walk out the Via Tiburtina, through the city gate there. Half a day out, the great estates begin. Look who is working the fields. It isn't Romans.",
               "There is a man in the Subura gathering the country men, tribe by tribe, so we know who has come in. Arrius. Ask anyone in the courtyards there."
             ] } },
 
@@ -1362,7 +1371,7 @@ const GAME_DATA = {
 
         { id:'stands', label:'Wooden Stands', x:0.905, y:0.36, type:'object', kind:'trivial', required:false,
           content:{ title:'Wooden Stands',
-            text:"Carpenters are hammering together tiers of wooden seats at the end of the Forum. A great family is holding funeral games for a dead father: a feast for the people, and pairs of gladiators fighting here, in the middle of the city, in front of the Senate house.\n\nThere is no stone arena in Rome. The Colosseum will not be built for another two hundred years. Families who can pay rent the best seats; the poor watch from rooftops and steps.\n\nTen years from now a tribune will tear stands like these down in the night so the poor can watch for free. His name will be Gracchus." } },
+            text:"Carpenters are hammering together tiers of wooden seats at the end of the Forum. A great family is holding funeral games for a dead father: a feast for the people, and pairs of gladiators fighting here, in the middle of the city, in front of the Senate house.\n\nThere is no stone arena in Rome. The Colosseum will not be built for another two hundred years. Families who can pay rent the best seats; the poor watch from rooftops and steps.\n\nAbout ten years from now a tribune will tear stands like these down in the night so the poor can watch for free. His name will be Gracchus." } },
 
         { id:'vestal', label:'A Woman in White', x:0.245, y:0.62, type:'dialogue', kind:'ambiance', noPoi:true, required:false,
           content:{ title:'Claudia, Vestal Virgin',
@@ -1620,7 +1629,7 @@ const GAME_DATA = {
           gotoRequires:['saw_estate', 'gaius'],
           gotoNote:"Once night falls, you will not see the city by daylight again.",
           gotoLocked:{
-            saw_estate:"Your patron's steward told you to ride out the Via Tiburtina and see the estate for yourself. You have not done it yet, and after tonight there will be no time.",
+            saw_estate:"Everyone you have asked says this began out on the great estates along the Via Tiburtina. You have not seen them for yourself yet, and after tonight there will be no time. The road out of the city leaves from the Forum.",
             gaius:"You came here to learn what the tribune's people intend. You have not yet spoken to anyone who sits on the land commission."
           },
           content:{ title:'The Street Door',
@@ -1633,7 +1642,7 @@ const GAME_DATA = {
             lines:[
               "You are the new scribe. You have a Cornelian name, I hear. So do I. We are both of us Scipio's people, in our way.",
               "When my husband died, the King of Egypt, Ptolemy, asked to marry me. I could have worn a crown. I said no, and I raised my twelve children here instead. Three are still living.",
-              "Do you imagine I raised a son to be a king? Romans threw out their kings five hundred years ago. My sons know that story better than anyone.",
+              "Do you imagine I raised a son to be a king? Romans threw out their kings nearly four hundred years ago. My sons know that story better than anyone.",
               "I used to tell them it shamed me that Rome still called me the mother-in-law of Scipio, and not yet the mother of the Gracchi. Perhaps I should have kept my mouth shut. I am afraid for them now. I will not pretend I am not."
             ] } },
 
@@ -1650,6 +1659,7 @@ const GAME_DATA = {
             text:"A great map drawn on linen and weighted at the corners, the commission's survey of public land around Rome. The surveyors have gridded the land into squares, and inside each square, smaller lots are numbered.\n\nIn the margin: LOTS NOT TO BE SOLD. Under the law, a man who receives a lot may not sell it, so the rich cannot simply buy it all back again.\n\nIn the corner of the map, a block of land on the Via Tiburtina has been outlined in red ink. Next to it, a name: P. SCIPIO NASICA." } },
 
         { id:'gaius', label:'The Younger Brother', x:0.455, y:0.55, type:'dialogue', kind:'clue', required:false,
+          grants:['knows_estate'],
           content:{ title:'Gaius Gracchus',
             people:['Gaius Gracchus'],
             desc:"A young man of about twenty-one, with a surveyor's measuring cross over his shoulder and mud on his boots. He talks fast, with his hands.",
@@ -1657,7 +1667,8 @@ const GAME_DATA = {
               "You are Arrius' scribe? Good, sit, there is a mountain to copy. I am Gaius, the brother. There are three of us on the commission: Tiberius, myself, and Appius Claudius, his father-in-law.",
               "Do you know where this started? Years ago, when my brother was going out to Spain, he rode up through Etruria. He told me there were no free men in the fields. None. Mile after mile of land worked by foreign slaves in chains. That was when he made up his mind.",
               "They say he wants a crown. He wants to measure land! You have seen what we do here. Lists and maps and measuring poles. Hardly the stuff of tyranny.",
-              "The Senate could have done this themselves ten years ago. Laelius proposed it, and backed away when the great men shouted. Somebody had to stop backing away."
+              "The Senate could have done this themselves ten years ago. Laelius proposed it, and backed away when the great men shouted. Somebody had to stop backing away.",
+              "If you doubt me, ride out the Via Tiburtina before tomorrow. Half a day. Look at the estate in red on that map, and then tell me who in this city wants to be king."
             ] } },
 
         { id:'blossius', label:'The Philosopher', x:0.590, y:0.55, type:'dialogue', kind:'clue', required:false,
@@ -1903,11 +1914,12 @@ const GAME_DATA = {
 
   // The report tab opens once the player has met the patron, and can be filed once every id
   // in requires has been discovered.
+  // Each id is a hotspot to discover or a scene to enter.
   report: {
     unlock:   'nasica',
-    requires: ['arrius_vigil'],
+    requires: ['arrius_vigil', 'fides_night'],
     filedCaption:   'Delivered to P. Scipio Nasica on the Capitol, the morning of the vote.',
-    lockedCaption:  'This report cannot be filed until your inquiry is complete.',
+    lockedCaption:  'This report cannot be filed until your inquiry is complete. Your patron expects it on the Capitol, before the vote.',
     fieldsCaption:  'Your inquiry is complete. Answer all five questions before you file.',
     readyCaption:   'Your inquiry is complete. The report goes to your patron at first light.'
   },
@@ -2025,7 +2037,7 @@ const GAME_DATA = {
         stamp: 'Ingratus: Ungrateful',
         after: "You were the only one in the Temple of Good Faith who said it out loud."
       },
-      gaius: "Now it is 123 BC, and you are standing in the Forum again, and a tribune is speaking from the Rostra. He walks the platform. He talks with his hands. It is Gaius Gracchus.\n\nHe has a grain law, so the poor of the city can buy bread at a fair price. He has colonies, and roads, and new courts, and he means to offer Roman citizenship to the allies. He is more dangerous to the Senate than his brother ever was, and everyone knows it, Gaius most of all.\n\nTwo years later the Senate will pass an emergency decree for the first time in its history, telling the consul to defend the Republic by any means. Gaius Gracchus will die on the Aventine Hill with three thousand of his followers. The consul will build a Temple of Concord in the Forum to celebrate, and someone will scrawl beneath its dedication, in charcoal, in the night: A WORK OF MAD DISCORD BUILDS A TEMPLE OF CONCORD.",
+      gaius: "Now it is 123 BC, and you are standing in the Forum again, and a tribune is speaking from the Rostra. He walks the platform. He talks with his hands. It is Gaius Gracchus.\n\nHe has a grain law, so the poor of the city can buy bread at a fair price. He has colonies, and roads, and new courts, and next year he will propose Roman citizenship for the Latin allies. He is more dangerous to the Senate than his brother ever was, and everyone knows it, Gaius most of all.\n\nTwo years later the Senate will pass an emergency decree for the first time in its history, telling the consul to defend the Republic by any means. His followers will make a stand on the Aventine Hill. Gaius will flee across the Tiber and die in the sacred grove of the goddess Furrina, with one loyal slave beside him, and some three thousand of his followers will be killed or executed. The consul will build a Temple of Concord in the Forum to celebrate, and someone will scrawl beneath its dedication, in charcoal, in the night: A WORK OF MAD DISCORD BUILDS A TEMPLE OF CONCORD.",
       calvus: "You think of the tablet from Titus Calvus that you found in the temple: names bought for two hundred denarii, a witness wanted to stand beside them. That is how it was done.",
       close: "On the Capitol, in 133 BC, Romans killed Romans over politics for the first time in four hundred years. It would not be the last time. A century later the Republic was gone, and Rome had an emperor in everything but name."
     },
@@ -2203,6 +2215,9 @@ function loadScene(id) {
     img.onerror = build;
   }
 
+  checkReportTab();
+  checkReportReady();
+
   const btn  = document.getElementById('progress-btn');
   const prog = scene.progression || {};
   btn.textContent = prog.buttonText || '';
@@ -2214,6 +2229,14 @@ function loadScene(id) {
 // HOTSPOTS
 // =============================================================
 // A hotspot with requires:[ids] stays hidden until every id has been discovered.
+// Optional background cards: trivia, and ambient objects that open no doorway.
+// They get a pale blue light and a 'Roman Life' tag so slower readers can skip them.
+// Conversations are never marked optional.
+function isExtra(h) {
+  if (h.type === 'navigation' || h.type === 'dialogue' || h.goto || h.transition) return false;
+  return h.kind === 'trivial' || h.kind === 'ambiance';
+}
+
 function hotspotAvailable(h) {
   return !h.requires || h.requires.every(id => gameState.discovered.has(id));
 }
@@ -2243,7 +2266,7 @@ function buildHotspots(scene) {
     const el = document.createElement('div');
     el.className = isNav
       ? 'hotspot nav-hotspot'
-      : 'hotspot' + (gameState.discovered.has(h.id) ? ' found' : '');
+      : 'hotspot' + (isExtra(h) ? ' extra' : '') + (gameState.discovered.has(h.id) ? ' found' : '');
     if (!hotspotAvailable(h)) el.style.display = 'none';
     el.dataset.id = h.id;
     el.style.left  = (h.x * 100) + '%';
@@ -2325,7 +2348,10 @@ function openCard(id) {
   added.classList.remove('show');
 
   const typeLabel = { dialogue: 'Conversation', document: 'Document', object: 'Observation' };
-  let html = `<span class="card-type-tag">${esc(h.content.tag || typeLabel[h.type] || h.type)}</span>`;
+  const extra = isExtra(h);
+  card.classList.toggle('is-extra', extra);
+  const tag = h.content.tag || (extra ? 'Roman Life \u00b7 Optional' : typeLabel[h.type] || h.type);
+  let html = `<span class="card-type-tag">${esc(tag)}</span>`;
   html += `<div class="card-title">${esc(h.content.title)}</div>`;
 
   if (h.type === 'dialogue') {
@@ -2511,7 +2537,7 @@ function updateReport(key, value) {
 }
 
 function reportInvestigationDone() {
-  return (GAME_DATA.report.requires || []).every(id => gameState.discovered.has(id));
+  return (GAME_DATA.report.requires || []).every(id => gameState.discovered.has(id) || gameState.visited.has(id));
 }
 
 function reportFieldsComplete() {

@@ -30,6 +30,8 @@ Three verdicts lead to three epilogues: swear he seeks a crown, tell your patron
 
 ## Classroom notes
 
+- **Optional reading is marked.** Gold lights are people and evidence. Pale blue lights are optional "Roman Life" cards (36 of the 99), tagged *Roman Life · Optional* when opened, so slower readers can skip them without missing a clue. Conversations are never marked optional, so every character, including the women, keeps a gold light.
+
 - **Everyday Rome.** Every scene has hotspots that build background knowledge: togas and the bulla, Roman names and why every daughter is Cornelia or Claudia, Vestal Virgins, lictors and fasces, a wrong sundial, gladiator stands, wax tablets and school, hot-food counters, chamber pots, roads and Roman numerals, olive oil and the strigil, the lack of police and street lights.
 - **Women and girls have voices.** Phoebe the nurse, Claudia the Vestal, Naevia the widow, Tertia (an 11-year-old water carrier who runs messages for the movement), Philumena the enslaved vilica, Cornelia, her daughter Sempronia, Claudia the tribune's wife, and Fannia the matron, who remembers the women's protest of 195 BC. Tertia, Naevia, Philumena, Cornelia, Sempronia and Claudia can be named in the ending, and the history page has a section on Roman women.
 
@@ -37,7 +39,7 @@ Three verdicts lead to three epilogues: swear he seeks a crown, tell your patron
 - **Real Reasons to Worry** is its own review category. The deposition of Octavius, the second tribunate, and the Pergamum money were real objections, and the game says so.
 - The **History Behind the Story** screen separates invented characters from real ones. It also flags the one invented detail in the hand-to-the-head scene: Plutarch reports the gesture, but the pre-arranged signal is the game's invention.
 - **Copy Report** at the end copies the student's five answers, verdict, and names for handing in.
-- Set `DEV_TOOLS = false` near the top of the script before students play. That hides the gear (tune mode and scene jumper) and the *Skip to the Forum* shortcut.
+- **Developer tools are off for students.** Open `index.html?dev` to get the gear (tuning mode and scene jumper) and the *Skip to the Forum* shortcut. Use `index.html?dev&tune` to start straight in tuning mode.
 
 ## Art
 
@@ -49,7 +51,7 @@ The older placeholder drawings are still in `art/*.svg`, and `tools/make_art.py`
 
 1. Give Gemini the reference image from `gemini/` and its prompt from `gemini/GEMINI_PROMPTS.md`, or give it the current `.jpg` with a short edit request.
 2. Save the result into `art/` and point the scene's `image:` at it.
-3. Open the game, press the **gear** (top left), pick the scene, and tap each hotspot's spot as it asks. Use **Copy All** and paste the new `x`/`y` values into `index.html`.
+3. Open `index.html?dev`, press the **gear** (top left), pick the scene, and tap each hotspot's spot as it asks. Use **Copy All** and paste the new `x`/`y` values into `index.html`.
 
 ## Files
 
