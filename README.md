@@ -6,6 +6,8 @@ You are a freedman, a former slave of the house of Publius Cornelius Scipio Nasi
 
 Open `index.html` in a browser to play. Everything runs locally, with no server needed.
 
+Progress saves automatically in the browser. Reopening the game offers **Continue** or **Start Over**. Each device and browser keeps one saved game, private windows don't save, and saving stops once the report is filed. **Play Again** at the end clears the save.
+
 ## How it plays
 
 - **Drag** left and right (or use the arrows) to look around each panorama. **Click** glowing spots to talk, read, and look.

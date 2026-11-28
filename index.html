@@ -2940,7 +2940,7 @@ function showReviewPage() {
   }
   html += `<div class="end-actions">
       <button class="end-btn-secondary" id="end-copy" onclick="copyFinalReport()">Copy Report</button>
-      <button class="card-transition-btn" onclick="location.reload()">Play Again</button>
+      <button class="card-transition-btn" onclick="clearSave(); location.reload()">Play Again</button>
     </div>`;
   showEnding(html);
 }
@@ -3233,6 +3233,98 @@ function esc(s) {
 }
 
 // =============================================================
+// SAVING: progress is kept in this browser, on this device.
+// Saving stops once the report is filed, so reopening during the
+// ending returns the player to the temple with the report unfiled.
+// =============================================================
+const SAVE_KEY = 'regnum-save-v1';
+let saveEnabled = false;
+
+function readSave() {
+  try { const raw = localStorage.getItem(SAVE_KEY); return raw ? JSON.parse(raw) : null; }
+  catch (e) { return null; }
+}
+
+function clearSave() {
+  try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+}
+
+function saveGame() {
+  if (!saveEnabled || gameState.reportFiled) return;
+  // Nothing worth keeping until the player has opened something.
+  if (!gameState.discovered.size) return;
+  const data = {
+    savedAt: Date.now(),
+    currentScene: gameState.currentScene,
+    discovered: [...gameState.discovered],
+    visited: [...gameState.visited],
+    evidence: gameState.evidence,
+    people: gameState.people,
+    report: gameState.report,
+    reportMilestone: gameState.reportMilestone,
+    notebookTab: gameState.notebookTab
+  };
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch (e) {}
+}
+
+function restoreSave(s) {
+  gameState.discovered = new Set(s.discovered || []);
+  gameState.visited = new Set(s.visited || []);
+  gameState.evidence = s.evidence || [];
+  gameState.people = s.people || {};
+  Object.assign(gameState.report, s.report || {});
+  gameState.reportMilestone = s.reportMilestone || 0;
+  document.getElementById('nb-badge').textContent = notebookBadgeCount();
+  renderNotebook();
+  syncReportFields();
+  const scene = GAME_DATA.scenes[s.currentScene] ? s.currentScene : GAME_DATA.sceneOrder[0];
+  loadScene(scene);
+  switchTab(s.notebookTab === 'report' && gameState.discovered.has(GAME_DATA.report.unlock) ? 'report' : 'notes');
+}
+
+function offerContinue() {
+  const s = readSave();
+  if (!s || !s.discovered || !s.discovered.length) { saveEnabled = true; return; }
+  const scene = GAME_DATA.scenes[s.currentScene];
+  const people = Object.keys(s.people || {}).length;
+  const ev = (s.evidence || []).length;
+  window._pendingSave = s;
+  showEnding(`
+    <span class="end-kicker">Welcome Back</span>
+    <div class="end-title">Continue Your Investigation?</div>
+    <hr class="card-rule">
+    ${paras(`Your investigation is saved on this device: ${people} ${people === 1 ? 'person' : 'people'} and ${ev} ${ev === 1 ? 'piece' : 'pieces'} of evidence in your notebook. You were last at ${scene ? scene.name : 'the start'}.`)}
+    <div class="end-actions">
+      <button class="end-btn-secondary" onclick="confirmStartOver()">Start Over</button>
+      <button class="card-transition-btn" onclick="continueSaved()">Continue</button>
+    </div>`);
+}
+
+function continueSaved() {
+  closeEnding();
+  restoreSave(window._pendingSave);
+  saveEnabled = true;
+}
+
+function confirmStartOver() {
+  showEnding(`
+    <span class="end-kicker">Start Over</span>
+    <div class="end-title">Erase Your Notes?</div>
+    <hr class="card-rule">
+    ${paras('Starting over erases everything in your notebook and your report on this device. This cannot be undone.')}
+    <div class="end-actions">
+      <button class="end-btn-secondary" onclick="offerContinue()">Go Back</button>
+      <button class="card-transition-btn" onclick="startFresh()">Erase and Start Over</button>
+    </div>`);
+}
+
+function startFresh() {
+  clearSave();
+  closeEnding();
+  saveEnabled = true;
+}
+
+// =============================================================
 // BOOT
 // =============================================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -3242,6 +3334,10 @@ document.addEventListener('DOMContentLoaded', () => {
   loadScene(gameState.currentScene);
   if (DEV_TOOLS) initTuneMode();
   else document.getElementById('tune-toggle-btn').style.display = 'none';
+  offerContinue();
+  setInterval(saveGame, 1500);
+  window.addEventListener('pagehide', saveGame);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) saveGame(); });
 });
 </script>
 </body>
