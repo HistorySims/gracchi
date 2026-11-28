@@ -1,0 +1,3344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Regnum</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: #0a0908;
+  background-color: #0a0908;
+  font-family: 'Libre Baskerville', serif;
+}
+
+/* VIEWPORT & PANORAMA */
+#game-viewport {
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0;
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  background-color: #0a0908;
+}
+#game-viewport.dragging { cursor: grabbing; }
+
+#panorama-container {
+  position: absolute;
+  top: 0; left: 0;
+  height: 100%;
+  will-change: transform;
+}
+
+#scene-image {
+  height: 100%;
+  width: auto;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+#hotspot-layer {
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  pointer-events: none;
+}
+
+/* HOTSPOTS */
+.hotspot {
+  position: absolute;
+  width: 26px; height: 26px;
+  transform: translate(-50%, -50%);
+  pointer-events: all;
+  cursor: pointer;
+  z-index: 10;
+}
+.hotspot-glow {
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,185,55,0.95) 0%, rgba(255,140,20,0.45) 55%, transparent 100%);
+  animation: hotspot-pulse 2.5s ease-in-out infinite;
+  transition: transform 0.2s ease, opacity 0.3s;
+}
+.hotspot:hover .hotspot-glow {
+  transform: scale(1.5);
+  animation-play-state: paused;
+  opacity: 1;
+}
+.hotspot.extra { width: 20px; height: 20px; }
+.hotspot.extra .hotspot-glow {
+  background: radial-gradient(circle, rgba(185,225,255,0.95) 0%, rgba(120,175,230,0.45) 55%, transparent 100%);
+}
+.hotspot.extra.found .hotspot-glow {
+  background: radial-gradient(circle, rgba(150,170,190,0.6) 0%, rgba(120,140,160,0.22) 55%, transparent 100%);
+}
+#evidence-card.is-extra .card-type-tag { color: #4a6f8f; }
+.hotspot.found .hotspot-glow {
+  background: radial-gradient(circle, rgba(90,130,95,0.65) 0%, rgba(70,110,75,0.25) 55%, transparent 100%);
+  animation-duration: 5s;
+}
+@keyframes hotspot-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50%       { opacity: 0.75; transform: scale(1.15); }
+}
+
+/* VIGNETTE */
+#vignette {
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 140px rgba(0,0,0,0.72), inset 0 0 50px rgba(0,0,0,0.45);
+  z-index: 20;
+}
+
+/* LOCATION LABEL */
+#location-label {
+  position: fixed;
+  top: 18px; left: 22px;
+  z-index: 30;
+  pointer-events: none;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.9), 0 0 14px rgba(0,0,0,0.85);
+}
+#loc-name {
+  display: block;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-variant: small-caps;
+  letter-spacing: 2.5px;
+  color: #d4c4a0;
+  line-height: 1.5;
+}
+#loc-sub {
+  display: block;
+  font-family: 'Libre Baskerville', serif;
+  font-size: 10px;
+  color: rgba(212,196,160,0.78);
+  letter-spacing: 1.2px;
+  font-style: italic;
+}
+#loc-act {
+  display: block;
+  margin-top: 5px;
+  font-family: 'Libre Baskerville', serif;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(212,196,160,0.66);
+}
+
+/* CHEVRONS */
+.chevron {
+  position: fixed;
+  top: 50%; transform: translateY(-50%);
+  z-index: 30;
+  background: none; border: none;
+  color: rgba(212,196,160,0.4);
+  font-size: 52px;
+  cursor: pointer;
+  padding: 10px 14px;
+  line-height: 1;
+  transition: color 0.25s, opacity 0.4s;
+  font-family: serif;
+  min-height: 44px; min-width: 44px;
+}
+.chevron:hover { color: rgba(212,196,160,0.85); }
+#chev-left  { left: 2px; }
+#chev-right { right: 2px; }
+.chevron.edge { opacity: 0; pointer-events: none; }
+
+/* SCROLL INDICATOR */
+#scroll-wrap {
+  position: fixed;
+  bottom: 14px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  width: 180px;
+  pointer-events: none;
+}
+#scroll-track {
+  height: 2px;
+  background: rgba(212,196,160,0.18);
+  border-radius: 1px;
+  position: relative;
+}
+#scroll-thumb {
+  height: 100%;
+  background: rgba(212,196,160,0.55);
+  border-radius: 1px;
+  position: absolute; top: 0;
+  transition: left 0.05s linear;
+}
+
+/* EVIDENCE CARD OVERLAY */
+#card-overlay {
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0;
+  z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  pointer-events: none;
+  background: rgba(0,0,0,0);
+  transition: background 0.3s;
+}
+#card-overlay.open {
+  background: rgba(0,0,0,0.76);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  pointer-events: all;
+}
+
+#evidence-card {
+  position: relative;
+  max-width: 540px; width: 100%;
+  max-height: 88vh; overflow-y: auto;
+  padding: 28px 32px 24px;
+  border-radius: 2px;
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.28s ease, transform 0.28s ease;
+  box-shadow: 0 10px 50px rgba(0,0,0,0.65), 0 2px 8px rgba(0,0,0,0.4);
+}
+#card-overlay.open #evidence-card { opacity: 1; transform: translateY(0); }
+
+#evidence-card.type-dialogue {
+  background: radial-gradient(ellipse at 15% 85%, rgba(160,110,50,0.09) 0%, transparent 55%), #f5ebce;
+}
+#evidence-card.type-document {
+  background: radial-gradient(ellipse at 85% 15%, rgba(100,90,70,0.07) 0%, transparent 55%), #f0edd8;
+}
+#evidence-card.type-object {
+  background: radial-gradient(ellipse at 50% 90%, rgba(140,100,50,0.09) 0%, transparent 55%), #f5edd6;
+}
+
+#card-close {
+  position: absolute; top: 10px; right: 12px;
+  background: none; border: none;
+  font-size: 24px; color: #9a7a5a;
+  cursor: pointer; line-height: 1;
+  padding: 4px 8px; min-width: 32px; min-height: 32px;
+  transition: color 0.2s;
+}
+#card-close:hover { color: #3a2a1a; }
+
+.card-type-tag {
+  display: block;
+  font-size: 9px; letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #9a7850; font-family: 'Libre Baskerville', serif;
+  margin-bottom: 7px;
+}
+.card-title {
+  font-family: 'Cinzel', serif;
+  font-size: 20px; font-weight: 700;
+  color: #251508; line-height: 1.3;
+  margin-bottom: 4px;
+}
+.card-desc {
+  font-style: italic; font-size: 13px;
+  color: #6a4828; margin-bottom: 14px; line-height: 1.55;
+  font-family: 'Libre Baskerville', serif;
+}
+.card-rule {
+  border: none; border-top: 1px solid rgba(100,70,35,0.22);
+  margin: 0 0 14px;
+}
+.card-line {
+  font-size: 14.5px; color: #3a2a1a;
+  line-height: 1.75; margin-bottom: 10px;
+  font-style: italic;
+  font-family: 'Libre Baskerville', serif;
+}
+.card-line:last-of-type { margin-bottom: 0; }
+.card-speaker {
+  display: block; margin-bottom: 1px;
+  font-style: normal; font-size: 9.5px;
+  letter-spacing: 1.8px; text-transform: uppercase;
+  color: #9a7850;
+}
+.card-body {
+  font-size: 13.5px; color: #3a2a1a;
+  line-height: 1.82; white-space: pre-line;
+  font-family: 'Libre Baskerville', serif;
+}
+
+.card-transition-btn {
+  display: block;
+  margin-top: 20px;
+  width: 100%;
+  background: linear-gradient(180deg, #594618 0%, #382c0e 100%);
+  border: 1px solid #897035;
+  color: #d4c4a0;
+  padding: 12px 20px;
+  font-family: 'Cinzel', serif;
+  font-size: 14px; letter-spacing: 1px;
+  cursor: pointer; border-radius: 1px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,215,100,0.1);
+  transition: background 0.2s;
+  min-height: 44px;
+}
+.card-transition-btn:hover {
+  background: linear-gradient(180deg, #6a5520 0%, #463a14 100%);
+  border-color: #a09040;
+}
+
+#card-added {
+  margin-top: 18px;
+  font-size: 11.5px; color: #5a7a5a;
+  font-style: italic; letter-spacing: 0.5px;
+  opacity: 0; transition: opacity 0.5s 0.25s;
+  font-family: 'Libre Baskerville', serif;
+}
+#card-added.show { opacity: 1; }
+
+/* NOTEBOOK SIDEBAR */
+#notebook {
+  position: fixed; top: 0; right: -380px;
+  width: 360px; height: 100%;
+  background: #14110e;
+  border-left: 1px solid rgba(212,196,160,0.1);
+  z-index: 200;
+  display: flex; flex-direction: column;
+  transition: right 0.32s cubic-bezier(0.25,0.46,0.45,0.94);
+}
+#notebook.open { right: 0; }
+
+#nb-header {
+  padding: 18px 18px 15px;
+  border-bottom: 1px solid rgba(212,196,160,0.12);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+#nb-header span {
+  font-family: 'Cinzel', serif;
+  font-size: 15px; font-variant: small-caps;
+  letter-spacing: 1.8px; color: #d4c4a0;
+}
+#nb-close {
+  background: none; border: none;
+  color: rgba(212,196,160,0.45); font-size: 22px;
+  cursor: pointer; padding: 4px 8px;
+  min-width: 36px; min-height: 36px;
+  transition: color 0.2s;
+}
+#nb-close:hover { color: #d4c4a0; }
+
+#nb-loc {
+  padding: 14px 18px 6px;
+  font-size: 9px; letter-spacing: 2.5px;
+  text-transform: uppercase; color: rgba(212,196,160,0.35);
+  font-family: 'Libre Baskerville', serif;
+  flex-shrink: 0;
+}
+
+#nb-scroll-area {
+  flex: 1; overflow-y: auto; padding: 4px 0 16px;
+}
+
+.nb-section-head {
+  padding: 10px 18px 4px;
+  font-size: 9px; letter-spacing: 2.5px;
+  text-transform: uppercase; font-variant: small-caps;
+  color: rgba(212,196,160,0.38);
+  font-family: 'Libre Baskerville', serif;
+  border-top: 1px solid rgba(212,196,160,0.08);
+  margin-top: 4px;
+}
+#nb-people-section .nb-section-head { border-top: none; margin-top: 0; }
+
+/* Person card */
+.nb-person-card {
+  padding: 10px 18px 12px;
+  border-bottom: 1px solid rgba(212,196,160,0.06);
+}
+.nb-person-name {
+  background: none; border: none;
+  font-family: 'Libre Baskerville', serif;
+  font-size: 13px; color: rgba(212,196,160,0.85);
+  cursor: pointer; text-align: left;
+  padding: 0; min-height: 44px;
+  width: 100%; line-height: 1.4;
+  transition: color 0.18s;
+}
+.nb-person-name:hover { color: #d4c4a0; text-decoration: underline; }
+
+/* POI slider */
+.nb-poi-wrap {
+  margin-top: 6px;
+}
+.nb-poi-slider {
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: rgba(212,196,160,0.15);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+.nb-poi-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #c9a84c;
+  border: 2px solid #e0c060;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+.nb-poi-slider::-moz-range-thumb {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #c9a84c;
+  border: 2px solid #e0c060;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+.nb-poi-label {
+  font-size: 9.5px;
+  color: rgba(212,196,160,0.45);
+  font-family: 'Libre Baskerville', serif;
+  letter-spacing: 0.8px;
+  margin-top: 3px;
+  font-style: italic;
+}
+
+/* Notes textarea */
+.nb-notes {
+  width: 100%;
+  margin-top: 7px;
+  background: #1e1810;
+  border: 1px solid rgba(212,196,160,0.18);
+  border-radius: 2px;
+  color: rgba(212,196,160,0.75);
+  font-family: 'Libre Baskerville', serif;
+  font-size: 11.5px;
+  line-height: 1.55;
+  padding: 6px 8px;
+  resize: none;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.nb-notes::placeholder { color: rgba(212,196,160,0.25); font-style: italic; }
+.nb-notes:focus { border-color: rgba(212,196,160,0.4); }
+
+.nb-entry {
+  padding: 11px 18px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(212,196,160,0.06);
+  display: flex; align-items: center; gap: 11px;
+  transition: background 0.18s;
+}
+.nb-entry:hover { background: rgba(212,196,160,0.05); }
+
+.nb-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  flex-shrink: 0;
+}
+.nb-dot.dialogue { background: rgba(200,160,80,0.6); }
+.nb-dot.document { background: rgba(130,110,170,0.55); }
+.nb-dot.object   { background: rgba(100,160,105,0.55); }
+
+.nb-info {}
+.nb-title {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 12.5px; color: rgba(212,196,160,0.8);
+  line-height: 1.4;
+}
+.nb-type {
+  font-size: 9px; color: rgba(212,196,160,0.3);
+  letter-spacing: 1.5px; text-transform: uppercase;
+  margin-top: 1px;
+  font-family: 'Libre Baskerville', serif;
+}
+
+#nb-empty {
+  padding: 24px 18px;
+  font-size: 12px; font-style: italic;
+  color: rgba(212,196,160,0.28);
+  font-family: 'Libre Baskerville', serif;
+}
+
+/* NOTEBOOK TABS */
+#nb-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(212,196,160,0.12);
+  flex-shrink: 0;
+  padding: 0 8px;
+  gap: 2px;
+}
+.nb-tab {
+  position: relative;
+  background: none; border: none;
+  border-bottom: 2px solid transparent;
+  color: rgba(212,196,160,0.4);
+  font-family: 'Libre Baskerville', serif;
+  font-size: 9.5px; letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 9px 12px 7px;
+  cursor: pointer; min-height: 44px;
+  transition: color 0.18s, border-color 0.18s;
+}
+.nb-tab.active { color: #d4c4a0; border-bottom-color: #c9a84c; }
+.nb-tab:hover:not(.active) { color: rgba(212,196,160,0.7); }
+.nb-new-dot {
+  position: absolute; top: 9px; right: 5px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #c9a84c;
+  box-shadow: 0 0 4px rgba(201,168,76,0.7);
+}
+
+/* FINAL REPORT PANEL */
+#nb-report-area {
+  flex: 1; overflow-y: auto;
+  padding: 14px 14px 20px;
+  display: none;
+}
+.report-form {
+  background: #f0e6c8;
+  border: 1px solid #b89a55;
+  border-radius: 2px;
+  padding: 18px 16px 20px;
+  color: #1e1404;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.08);
+}
+.report-form-title {
+  font-family: 'Cinzel', serif;
+  font-size: 12px; letter-spacing: 2px;
+  text-transform: uppercase; text-align: center;
+  color: #1e1404; margin-bottom: 3px;
+}
+.report-form-sub {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 9px; letter-spacing: 1.5px;
+  text-transform: uppercase; text-align: center;
+  color: rgba(30,20,4,0.5); margin-bottom: 14px;
+  font-style: italic;
+}
+.report-rule {
+  border: none; border-top: 1px solid rgba(30,20,4,0.18);
+  margin: 0 0 14px;
+}
+.report-field { margin-bottom: 12px; }
+.report-label {
+  display: block;
+  font-family: 'Libre Baskerville', serif;
+  font-size: 8.5px; letter-spacing: 2px;
+  text-transform: uppercase; color: rgba(30,20,4,0.55);
+  margin-bottom: 4px;
+}
+.report-textarea {
+  width: 100%; box-sizing: border-box;
+  background: rgba(255,255,255,0.5);
+  border: 1px solid rgba(30,20,4,0.18);
+  border-radius: 1px;
+  color: #120d02;
+  font-family: 'Libre Baskerville', serif;
+  font-size: 12px; line-height: 1.6;
+  padding: 7px 9px; resize: none; outline: none;
+  transition: border-color 0.2s;
+}
+.report-textarea:focus { border-color: rgba(30,20,4,0.45); }
+.report-textarea::placeholder { color: rgba(30,20,4,0.28); font-style: italic; }
+.report-submit-btn {
+  width: 100%; min-height: 44px;
+  background: rgba(30,20,4,0.08);
+  border: 1px solid rgba(30,20,4,0.22);
+  color: rgba(30,20,4,0.35);
+  font-family: 'Cinzel', serif;
+  font-size: 12px; letter-spacing: 1px;
+  padding: 12px 20px; border-radius: 1px;
+  cursor: not-allowed; margin-top: 4px;
+}
+.report-submit-caption {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 9px; color: rgba(30,20,4,0.38);
+  text-align: center; margin-top: 8px;
+  font-style: italic; line-height: 1.5;
+}
+
+/* NOTEBOOK TOGGLE */
+#nb-toggle {
+  position: fixed; top: 18px; right: 18px;
+  z-index: 150;
+  background: rgba(24,18,11,0.92);
+  border: 1px solid rgba(212,196,160,0.22);
+  color: #d4c4a0;
+  padding: 8px 13px;
+  cursor: pointer;
+  font-family: 'Libre Baskerville', serif;
+  font-size: 11px; letter-spacing: 1px;
+  display: flex; align-items: center; gap: 7px;
+  min-height: 44px; border-radius: 1px;
+  transition: background 0.2s, border-color 0.2s;
+}
+#nb-toggle:hover {
+  background: rgba(38,28,16,0.96);
+  border-color: rgba(212,196,160,0.45);
+}
+#nb-toggle.has-news::after {
+  content: ''; position: absolute; top: 5px; right: 5px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #c9a84c; box-shadow: 0 0 4px rgba(201,168,76,0.8);
+}
+#nb-badge {
+  background: rgba(212,196,160,0.14);
+  border-radius: 50%;
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10.5px; color: #d4c4a0;
+}
+
+/* PROGRESSION BUTTON */
+#progress-btn {
+  position: fixed; bottom: 34px; left: 50%;
+  transform: translateX(-50%) translateY(22px);
+  z-index: 50;
+  background: linear-gradient(180deg, #594618 0%, #382c0e 100%);
+  border: 1px solid #897035;
+  color: #d4c4a0;
+  padding: 13px 30px;
+  font-family: 'Cinzel', serif;
+  font-size: 14px; letter-spacing: 1px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.55s ease, transform 0.55s ease;
+  min-height: 44px; border-radius: 1px;
+  box-shadow: 0 3px 14px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,215,100,0.1);
+  pointer-events: none;
+}
+#progress-btn.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: all;
+}
+#progress-btn:hover {
+  background: linear-gradient(180deg, #6a5520 0%, #463a14 100%);
+  border-color: #a09040;
+}
+
+/* TRANSITION SCREEN */
+#transition {
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0;
+  background: #0a0908;
+  z-index: 500;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.7s;
+  display: flex; align-items: center; justify-content: center;
+}
+#transition.on { opacity: 1; pointer-events: all; }
+#trans-inner { text-align: center; opacity: 0; transition: opacity 0.5s 0.55s; }
+#transition.on #trans-inner { opacity: 1; }
+.trans-act {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 11px; letter-spacing: 3px;
+  text-transform: uppercase; color: rgba(212,196,160,0.45);
+  margin-bottom: 14px;
+}
+.trans-title {
+  font-family: 'Cinzel', serif;
+  font-size: 30px; color: #d4c4a0; margin-bottom: 8px;
+}
+.trans-sub {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 13px; font-style: italic;
+  color: rgba(212,196,160,0.5);
+}
+
+/* SCROLLBARS */
+#nb-scroll-area::-webkit-scrollbar,
+#evidence-card::-webkit-scrollbar { width: 3px; }
+#nb-scroll-area::-webkit-scrollbar-track,
+#evidence-card::-webkit-scrollbar-track { background: transparent; }
+#nb-scroll-area::-webkit-scrollbar-thumb,
+#evidence-card::-webkit-scrollbar-thumb {
+  background: rgba(212,196,160,0.2); border-radius: 2px;
+}
+
+/* DESKTOP DOCKED NOTEBOOK */
+@media (min-width: 1000px) {
+  #notebook {
+    right: 0 !important;
+    width: 380px !important;
+    transition: none;
+  }
+  #nb-toggle { display: none !important; }
+  #nb-close  { display: none !important; }
+  #game-viewport { right: 380px; }
+  #vignette { right: 380px; }
+  #card-overlay { right: 380px; }
+  #scroll-wrap { left: calc(50% - 190px); }
+  #chev-right { right: 382px; }
+}
+
+/* MOBILE */
+@media (max-width: 500px) {
+  #notebook { width: 100%; right: -100%; }
+  #evidence-card { padding: 20px 18px; }
+  .card-title { font-size: 17px; }
+  .card-body, .card-line { font-size: 13px; }
+  #nb-toggle { top: 14px; right: 14px; }
+}
+
+/* NAVIGATION HOTSPOTS */
+.hotspot.nav-hotspot {
+  width: 48px; height: 48px;
+  transform: translate(-50%, -50%);
+}
+.hotspot.nav-hotspot .hotspot-glow {
+  background: radial-gradient(circle, rgba(150,210,240,0.95) 0%, rgba(80,155,200,0.45) 55%, transparent 100%);
+  animation: nav-pulse 3s ease-in-out infinite;
+}
+.hotspot.nav-hotspot:hover .hotspot-glow {
+  transform: scale(1.4);
+  animation-play-state: paused;
+  opacity: 1;
+}
+@keyframes nav-pulse {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50%       { opacity: 0.85; transform: scale(1.2); }
+}
+.hotspot-nav-label {
+  position: absolute;
+  top: calc(100% + 5px); left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-family: 'Libre Baskerville', serif;
+  font-size: 10px; font-style: italic;
+  color: rgba(170,215,240,0.9);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.95), 0 0 10px rgba(0,0,0,0.8);
+  letter-spacing: 0.3px;
+  pointer-events: none;
+}
+
+/* ── TUNE MODE ────────────────────────────────────────────── */
+body.tune-mode #game-viewport { cursor: crosshair; }
+body.tune-mode .hotspot { display: none; }
+
+#tune-banner {
+  display: none;
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 900;
+  background: rgba(160,30,30,0.95);
+  color: #fff;
+  font-family: 'Libre Baskerville', serif;
+  font-size: 13px;
+  padding: 10px 14px;
+  display: none;
+  align-items: center;
+  gap: 10px;
+}
+body.tune-mode #tune-banner { display: flex; }
+#tune-prompt {
+  flex: 1;
+  font-style: italic;
+  line-height: 1.3;
+}
+#tune-skip-btn {
+  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+  color: #fff; font-family: 'Libre Baskerville', serif;
+  font-size: 11px; padding: 4px 10px; cursor: pointer; border-radius: 1px;
+  white-space: nowrap;
+}
+#tune-skip-btn:hover { background: rgba(255,255,255,0.28); }
+
+.tune-marker {
+  position: absolute;
+  width: 28px; height: 28px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 800;
+}
+.tune-marker-ring {
+  position: absolute; inset: 0;
+  border: 2px solid rgba(255,80,80,0.9);
+  border-radius: 50%;
+}
+.tune-marker-dot {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 6px; height: 6px;
+  background: rgba(255,80,80,1);
+  border-radius: 50%;
+  transform: translate(-50%,-50%);
+}
+.tune-marker-label {
+  position: absolute;
+  top: -18px; left: 50%;
+  transform: translateX(-50%);
+  font-family: monospace;
+  font-size: 11px;
+  color: #ff6060;
+  white-space: nowrap;
+  text-shadow: 0 1px 3px #000, 0 0 6px #000;
+}
+
+#tune-panel {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 900;
+  background: rgba(10,8,6,0.97);
+  border-top: 1px solid rgba(255,80,80,0.4);
+  max-height: 42vh;
+  overflow-y: auto;
+  padding: 12px 16px 16px;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+}
+body.tune-mode #tune-panel { display: block; }
+body.tune-mode #tune-panel.open { transform: translateY(0); }
+
+/* pull-up tab, always visible in tune mode */
+#tune-tab {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  z-index: 901;
+  background: rgba(160,30,30,0.92);
+  color: rgba(255,200,200,0.9);
+  font-family: 'Libre Baskerville', serif;
+  font-size: 11px; letter-spacing: 1px;
+  padding: 5px 18px 4px;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+body.tune-mode #tune-tab { display: block; }
+
+#tune-panel h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 13px; color: rgba(255,120,120,0.9);
+  margin-bottom: 10px; letter-spacing: 1px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+#tune-copy-btn {
+  background: rgba(255,80,80,0.2);
+  border: 1px solid rgba(255,80,80,0.5);
+  color: rgba(255,180,180,0.9);
+  font-family: 'Libre Baskerville', serif;
+  font-size: 11px; letter-spacing: 1px;
+  padding: 5px 12px; cursor: pointer; border-radius: 1px;
+}
+#tune-copy-btn:hover { background: rgba(255,80,80,0.35); }
+#tune-clear-btn {
+  background: none;
+  border: 1px solid rgba(255,80,80,0.25);
+  color: rgba(255,120,120,0.5);
+  font-family: 'Libre Baskerville', serif;
+  font-size: 11px; padding: 5px 10px; cursor: pointer; border-radius: 1px;
+  margin-right: 6px;
+}
+#tune-output {
+  font-family: monospace;
+  font-size: 12px;
+  color: #a8d8a8;
+  white-space: pre;
+  line-height: 1.7;
+  background: rgba(255,255,255,0.03);
+  padding: 10px 12px;
+  border-radius: 2px;
+  border: 1px solid rgba(255,255,255,0.06);
+  min-height: 32px;
+}
+#tune-hint {
+  margin-top: 8px;
+  font-family: 'Libre Baskerville', serif;
+  font-size: 10px; color: rgba(255,255,255,0.3);
+  font-style: italic;
+}
+
+/* gear button: top-left, below location label */
+#tune-toggle-btn {
+  position: fixed; top: 68px; left: 22px;
+  z-index: 400;
+  background: rgba(10,8,6,0.6);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.22);
+  font-size: 15px; line-height: 1;
+  width: 30px; height: 30px;
+  border-radius: 50%; cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+  display: flex; align-items: center; justify-content: center;
+  min-width: 44px; min-height: 44px; width: 44px; height: 44px;
+}
+#tune-toggle-btn:hover,
+#tune-toggle-btn.active { color: rgba(255,100,100,0.9); background: rgba(30,10,10,0.9); }
+
+#tune-exit-btn {
+  background: none; border: 1px solid rgba(255,255,255,0.3);
+  color: #fff; font-family: 'Libre Baskerville', serif;
+  font-size: 11px; padding: 2px 10px; cursor: pointer;
+  border-radius: 1px; margin-left: 12px; vertical-align: middle;
+}
+#tune-scene {
+  max-width: 190px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff; font-family: 'Libre Baskerville', serif;
+  font-size: 11px; padding: 4px 6px; border-radius: 1px;
+}
+#tune-scene option { color: #000; }
+@media (max-width: 600px) { #tune-scene { max-width: 110px; } }
+
+/* HOTSPOTS THAT APPEAR LATER */
+.hotspot.reveal { animation: hotspot-reveal 1.4s ease-out; }
+@keyframes hotspot-reveal {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+  55%  { opacity: 1; transform: translate(-50%, -50%) scale(1.7); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* CARD DOORWAYS */
+.card-goto-note {
+  margin-top: 18px;
+  font-size: 12px; font-style: italic;
+  color: #7a5a38; line-height: 1.6;
+  font-family: 'Libre Baskerville', serif;
+}
+.card-goto-note + .card-transition-btn { margin-top: 10px; }
+.card-goto-locked {
+  margin-top: 18px; padding: 9px 12px;
+  border-left: 2px solid rgba(100,70,35,0.35);
+  font-size: 12.5px; font-style: italic;
+  color: #6a4828; line-height: 1.6;
+  font-family: 'Libre Baskerville', serif;
+}
+
+/* FINAL REPORT, READY TO FILE */
+.report-submit-btn:not(:disabled) {
+  background: linear-gradient(180deg, #594618 0%, #382c0e 100%);
+  border-color: #897035; color: #d4c4a0; cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,215,100,0.1);
+}
+.report-submit-btn:not(:disabled):hover { background: linear-gradient(180deg, #6a5520 0%, #463a14 100%); }
+.report-textarea[readonly] { background: rgba(255,255,255,0.22); }
+
+/* ENDING */
+#ending-overlay {
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0;
+  z-index: 140;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  background: rgba(0,0,0,0.74);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+#ending-overlay.open { opacity: 1; pointer-events: all; }
+#ending-card {
+  position: relative;
+  max-width: 600px; width: 100%;
+  max-height: 100%; overflow-y: auto;
+  padding: 28px 32px 26px; border-radius: 2px;
+  background: radial-gradient(ellipse at 20% 0%, rgba(160,110,50,0.09) 0%, transparent 55%), #f3e9cc;
+  box-shadow: 0 10px 50px rgba(0,0,0,0.65), 0 2px 8px rgba(0,0,0,0.4);
+  color: #3a2a1a;
+  font-family: 'Libre Baskerville', serif;
+}
+#ending-card::-webkit-scrollbar { width: 3px; }
+#ending-card::-webkit-scrollbar-thumb { background: rgba(100,70,35,0.25); border-radius: 2px; }
+.end-kicker {
+  display: block; font-size: 9px; letter-spacing: 2.5px;
+  text-transform: uppercase; color: #9a7850; margin-bottom: 7px;
+}
+.end-title {
+  font-family: 'Cinzel', serif;
+  font-size: 22px; font-weight: 700; color: #251508;
+  line-height: 1.3; margin-bottom: 6px;
+}
+.end-head {
+  font-family: 'Cinzel', serif;
+  font-size: 15px; font-weight: 600; color: #251508;
+  margin: 20px 0 8px; letter-spacing: 0.5px;
+}
+.end-p { font-size: 13.5px; line-height: 1.8; color: #3a2a1a; margin-bottom: 12px; white-space: pre-line; }
+.end-p.quiet { font-size: 12px; font-style: italic; color: #7a5a38; }
+.end-stamp {
+  display: inline-block; margin: 4px 0 16px; padding: 6px 12px;
+  border: 2px solid #7a1f16; color: #7a1f16;
+  font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  transform: rotate(-2.5deg); opacity: 0.88;
+}
+.end-stamp.good { border-color: #2f4a33; color: #2f4a33; }
+.end-names { margin: 6px 0 2px; border-top: 1px solid rgba(100,70,35,0.16); }
+.end-name-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 7px 0; border-bottom: 1px solid rgba(100,70,35,0.16);
+}
+.end-name-info { flex: 1; min-width: 0; }
+.end-name { font-size: 14px; color: #251508; }
+.end-name-poi { font-size: 10.5px; font-style: italic; color: #8a6a48; margin-top: 2px; }
+.end-toggle {
+  flex-shrink: 0; min-height: 44px; min-width: 118px; padding: 8px 12px;
+  background: transparent; border: 1px solid rgba(100,70,35,0.4); color: #6a4828;
+  font-family: 'Libre Baskerville', serif; font-size: 10.5px;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  cursor: pointer; border-radius: 1px;
+  transition: background 0.18s, color 0.18s;
+}
+.end-toggle.on { background: #6b1d14; border-color: #4a120c; color: #f3e9cc; }
+.end-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+.end-actions > button { flex: 1 1 160px; margin-top: 0; }
+.end-btn-secondary {
+  min-height: 44px; padding: 12px 18px;
+  background: transparent; border: 1px solid rgba(100,70,35,0.4); color: #5a3c20;
+  font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: 1px;
+  cursor: pointer; border-radius: 1px;
+}
+.end-btn-secondary:hover { background: rgba(100,70,35,0.08); }
+.end-item-title {
+  font-family: 'Cinzel', serif;
+  font-size: 14px; font-weight: 600; color: #251508; margin-bottom: 3px;
+}
+.end-q { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #8a6a48; margin-top: 12px; }
+.end-a { font-size: 13px; line-height: 1.7; color: #251508; white-space: pre-wrap; word-wrap: break-word; }
+.end-cat { padding: 10px 0; border-bottom: 1px solid rgba(100,70,35,0.16); }
+.end-cat-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.end-cat-title { font-family: 'Cinzel', serif; font-size: 14.5px; font-weight: 600; color: #251508; }
+.end-cat-count { font-size: 11px; color: #8a6a48; white-space: nowrap; }
+.end-cat-desc { font-size: 12.5px; line-height: 1.6; color: #4a3826; margin-top: 3px; }
+.end-cat-found { font-size: 11.5px; font-style: italic; color: #4f6e4f; margin-top: 4px; line-height: 1.55; }
+.end-cat-none { font-size: 11.5px; font-style: italic; color: #9a7850; margin-top: 4px; }
+body.ending-mode .hotspot,
+body.ending-mode #progress-btn,
+body.ending-mode #tune-toggle-btn { display: none !important; }
+body.ending-mode #card-overlay { z-index: 160; }
+@media (min-width: 1000px) { #ending-overlay { right: 380px; } }
+@media (max-width: 999px)  { #ending-overlay { padding-top: 66px; } }
+@media (max-width: 500px) {
+  #ending-card { padding: 22px 18px 20px; }
+  .end-title { font-size: 18px; }
+  .end-p { font-size: 13px; }
+  .end-toggle { min-width: 104px; }
+}
+
+/* VERDICT CHOICES */
+.end-verdicts { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+.end-verdict {
+  text-align: left; cursor: pointer; padding: 12px 14px;
+  background: rgba(255,255,255,0.35); border: 1px solid rgba(100,70,35,0.3); border-radius: 2px;
+  font-family: 'Libre Baskerville', serif; color: #251508; font-size: 14px; line-height: 1.5;
+}
+.end-verdict:hover { background: rgba(107,29,20,0.08); border-color: #6b1d14; }
+.end-verdict small { display: block; font-size: 11px; font-style: italic; color: #8a6a48; margin-top: 3px; }
+</style>
+</head>
+<body style="background:#0a0908;margin:0;padding:0;">
+
+<div id="game-viewport">
+  <div id="panorama-container">
+    <img id="scene-image" alt="">
+    <div id="hotspot-layer"></div>
+  </div>
+  <div id="vignette"></div>
+  <div id="location-label">
+    <span id="loc-name"></span>
+    <span id="loc-sub"></span>
+    <span id="loc-act"></span>
+  </div>
+  <button class="chevron" id="chev-left"  aria-label="Pan left">&#8249;</button>
+  <button class="chevron" id="chev-right" aria-label="Pan right">&#8250;</button>
+  <div id="scroll-wrap">
+    <div id="scroll-track"><div id="scroll-thumb"></div></div>
+  </div>
+</div>
+
+<div id="card-overlay" role="dialog" aria-modal="true" aria-label="Evidence">
+  <div id="evidence-card">
+    <button id="card-close" aria-label="Close">&#215;</button>
+    <div id="card-inner"></div>
+    <div id="card-added">&#10003; Added to notebook</div>
+  </div>
+</div>
+
+<div id="ending-overlay" role="dialog" aria-modal="true" aria-label="The Report">
+  <div id="ending-card"><div id="ending-inner"></div></div>
+</div>
+
+<div id="notebook" role="complementary" aria-label="Notebook">
+  <div id="nb-header">
+    <span>Wax Tablets</span>
+    <button id="nb-close" aria-label="Close notebook">&#215;</button>
+  </div>
+  <div id="nb-loc"></div>
+  <div id="nb-tabs">
+    <button class="nb-tab active" data-tab="notes" onclick="switchTab('notes')">Notes</button>
+    <button class="nb-tab" data-tab="report" id="tab-report" onclick="switchTab('report')" style="display:none">
+      Final Report<span id="nb-report-dot" class="nb-new-dot" style="display:none"></span>
+    </button>
+  </div>
+  <div id="nb-scroll-area">
+    <div id="nb-empty">Your notebook is empty.</div>
+    <div id="nb-people-section">
+      <div class="nb-section-head">People</div>
+      <div id="nb-people"></div>
+    </div>
+    <div id="nb-evidence-section">
+      <div class="nb-section-head">Evidence</div>
+      <div id="nb-evidence"></div>
+    </div>
+  </div>
+  <div id="nb-report-area">
+    <div class="report-form">
+      <div class="report-form-title">To P. Cornelius Scipio Nasica</div>
+      <div class="report-form-sub">Report of His Freedman</div>
+      <hr class="report-rule">
+      <div class="report-field">
+        <label class="report-label" for="report-who">Quis &middot; Who</label>
+        <textarea class="report-textarea" id="report-who" rows="3" placeholder="Who stands behind the tribune?" oninput="updateReport('who', this.value)"></textarea>
+      </div>
+      <div class="report-field">
+        <label class="report-label" for="report-what">Quid &middot; What</label>
+        <textarea class="report-textarea" id="report-what" rows="3" placeholder="What do they intend? Does he seek a crown?" oninput="updateReport('what', this.value)"></textarea>
+      </div>
+      <div class="report-field">
+        <label class="report-label" for="report-where">Ubi &middot; Where</label>
+        <textarea class="report-textarea" id="report-where" rows="3" placeholder="Where will they gather?" oninput="updateReport('where', this.value)"></textarea>
+      </div>
+      <div class="report-field">
+        <label class="report-label" for="report-when">Quando &middot; When</label>
+        <textarea class="report-textarea" id="report-when" rows="2" placeholder="When will they act?" oninput="updateReport('when', this.value)"></textarea>
+      </div>
+      <div class="report-field">
+        <label class="report-label" for="report-why">Cur &middot; Why</label>
+        <textarea class="report-textarea" id="report-why" rows="4" placeholder="Why? What drove them to this?" oninput="updateReport('why', this.value)"></textarea>
+      </div>
+      <hr class="report-rule">
+      <button class="report-submit-btn" id="report-submit" disabled onclick="fileReport()">File Report</button>
+      <div class="report-submit-caption" id="report-caption">This report cannot be filed until your inquiry is complete.</div>
+    </div>
+  </div>
+</div>
+
+<button id="nb-toggle" aria-label="Open notebook">
+  <span>&#9997; Notebook</span>
+  <span id="nb-badge">0</span>
+</button>
+
+<button id="progress-btn"></button>
+
+<div id="transition">
+  <div id="trans-inner">
+    <div class="trans-act"></div>
+    <div class="trans-title"></div>
+    <div class="trans-sub"></div>
+  </div>
+</div>
+
+<button id="tune-toggle-btn" title="Toggle tuning mode">&#9881;</button>
+
+<div id="tune-banner">
+  <span id="tune-prompt">&#9678; TUNING MODE</span>
+  <select id="tune-scene" aria-label="Jump to scene"></select>
+  <button id="tune-skip-btn">Skip</button>
+  <button id="tune-exit-btn">Exit</button>
+</div>
+
+<div id="tune-tab">&#9650; Results</div>
+
+<div id="tune-panel">
+  <h3>
+    Coordinates
+    <span>
+      <button id="tune-clear-btn">Restart</button>
+      <button id="tune-copy-btn">Copy All</button>
+    </span>
+  </h3>
+  <div id="tune-output"></div>
+  <div id="tune-hint">Drag to pan &nbsp;·&nbsp; Tap to place &nbsp;·&nbsp; Skip to leave a hotspot unchanged</div>
+</div>
+
+<script>
+// =============================================================
+// GAME DATA: add future scenes here; engine reads generically
+// =============================================================
+// Developer tools: the gear (tune mode and scene jumper) and the Skip to the Forum shortcut.
+// Off for students. To turn them on, open the game with ?dev on the end of the address,
+// e.g. index.html?dev (or index.html?dev&tune to start straight in tuning mode).
+const DEV_TOOLS = /[?&]dev\b/.test(location.search);
+
+// Every non-navigation hotspot has a kind: 'clue', 'ambiance', 'trivial', or 'herring'.
+// Only clues count toward the case review; each herring carries a debunk shown there.
+const GAME_DATA = {
+
+  sceneOrder: ['nasica_atrium', 'forum_day', 'subura_insula', 'tiburtina_estate', 'gracchus_house',
+               'vigil_night', 'fides_night'],
+
+  scenes: {
+
+    nasica_atrium: {
+      id:       'nasica_atrium',
+      name:     'House of Scipio Nasica',
+      subtitle: 'The Palatine, Rome',
+      actLabel: 'Act I - The Commission',
+      image:    'art/nasica_atrium.jpg',
+
+      hotspots: [
+        { id:'lararium', label:'The Lararium', x:0.055, y:0.45, type:'object', kind:'ambiance', required:false,
+          content:{ title:'The Lararium',
+            text:"A little painted shrine by the door: the household gods, two dancing Lares with drinking horns, and a snake curling below them. A smear of fresh incense ash.\n\nYou were born a slave in this house. As a boy you swept this shrine every morning. Five years ago your master touched you with the rod before the praetor and said the words, and you walked out a free man wearing his family's name. You still sweep it, some mornings, out of habit." } },
+
+        { id:'imagines', label:'The Ancestor Masks', x:0.190, y:0.30, type:'object', kind:'clue', required:false,
+          content:{ title:'The Ancestor Masks',
+            text:"Wax masks of the Cornelii Scipiones stare out of their painted cupboards, each one labelled with the offices its owner held. Consuls. Censors. Conquerors of Spain and Africa. In the middle, the face every Roman knows: Scipio Africanus, who beat Hannibal.\n\nAfricanus had two daughters, both named Cornelia. The elder was your master's mother. The younger is the mother of Tiberius Gracchus.\n\nThe man your patron wants destroyed is his own first cousin." } },
+
+        { id:'nasica', label:'Scipio Nasica', x:0.310, y:0.52, type:'dialogue', kind:'clue', noPoi:true, required:true,
+          content:{ title:'Publius Cornelius Scipio Nasica',
+            desc:"Your patron. Former consul, Pontifex Maximus, chief priest of Rome. A tall man with a heavy jaw, who speaks as if every room were the Senate house.",
+            lines:[
+              "Sit. You have heard what my cousin has been doing. Tiberius Gracchus, tribune of the people, means to take the public land out of the hands of the men who have farmed it for three generations and give it away in little lots to the mob.",
+              "Worse. When his colleague Octavius vetoed the law, as was his right, Tiberius had the Assembly vote him out of office. A sacred tribune, thrown off the Rostra like a drunk. Then King Attalus of Pergamum dies and leaves his kingdom to Rome, and Tiberius says the People will decide what to do with the money. Not the Senate. The People. Meaning himself.",
+              "Now he means to stand for the tribunate a second year running. No man has ever done it. A man who removes his colleagues, spends the treasury, and refuses to leave office: the Romans have a word for that man. Rex. King.",
+              "I need proof. Who stands behind him, what they intend, where they gather, when they mean to act. Go among them. You are a freedman with a fair hand; say you are a scribe looking for work. Bring me your report before the vote, and bring me names.",
+              "You wear my family's name. Remember it."
+            ] } },
+
+        { id:'commission', label:'Your Commission', x:0.370, y:0.75, type:'document', kind:'clue', required:true,
+          content:{ title:'Your Commission',
+            text:"Two wax tablets bound with a cord, sealed with the Scipio ring.\n\nP. CORNELIUS SCIPIO NASICA TO HIS FREEDMAN, GREETING.\nInquire into Ti. Sempronius Gracchus, tribune of the plebs, and those around him. Learn whether he aims at regnum, at kingship over the Roman People. Learn who his men are and what they plan for the day of the vote. Report to me in writing before the Assembly meets on the Capitol.\n\nThe question is not whether he aims at kingship. It is written as though that were already settled." } },
+
+        { id:'census_tablet', label:'The Census Tablet', x:0.230, y:0.74, type:'document', kind:'clue', required:false,
+          content:{ title:'The Census Tablet',
+            text:"A bronze-bound tablet on your patron's table, copied from the censors' records. Every five years the censors count the citizens who own enough to be enrolled.\n\nCitizens counted, 142 BC: 328,442.\nCitizens counted, 136 BC: 317,933.\n\nFewer every count, in years when Rome has conquered more than ever. Beneath, in your patron's hand: 'Gracchus will quote these. Answer: the men are idle, not poor.'\n\nOnly men with property could be called up for the legions. Fewer farmers meant fewer soldiers." } },
+
+        { id:'pompeius', label:'Quintus Pompeius', x:0.585, y:0.53, type:'dialogue', kind:'herring', noPoi:true, required:false,
+          debunk:"Quintus Pompeius really did tell the Senate that he lived next door to Tiberius and had seen the envoy from Pergamum hand him a royal diadem and a purple robe. Plutarch reports the charge. Nobody ever produced the diadem, and the chest that came from Pergamum held letters and a will. A story told often enough in the Senate starts to sound like evidence.",
+          content:{ title:'Quintus Pompeius',
+            desc:"A senator taking wine with your patron, a former consul himself, in a hurry to be heard.",
+            lines:[
+              "You are the freedman? Good. Then listen, because I will tell the Senate this myself. I live next door to Gracchus. I watch his door.",
+              "When the envoy came from Pergamum with old Attalus' will, the envoy brought Tiberius gifts. A royal diadem. A purple robe. I saw the man carry in the chest with my own eyes.",
+              "A diadem! What does a tribune of the plebs want with a diadem? Find it. Find me one slave who saw him try it on, and we are done with this."
+            ] } },
+
+        { id:'impluvium', label:'The Impluvium', x:0.470, y:0.88, type:'object', kind:'ambiance', required:false,
+          content:{ title:'The Impluvium',
+            text:"The shallow marble pool in the middle of the atrium catches the rain that falls through the opening in the roof. Today it holds only a square of summer sky and a few floating petals from the garden. A household's whole fortune can be read in its atrium. This one says: very old money." } },
+
+        { id:'compluvium', label:'The Opening in the Roof', x:0.470, y:0.05, type:'object', kind:'ambiance', required:false,
+          content:{ title:'The Opening in the Roof',
+            text:"Through the square opening in the roof, a patch of hot blue sky. Swallows cut across it. Down in the valley, the noise of the Forum carries all the way up the Palatine: hawkers, hammering, a crowd cheering a speech you cannot quite hear." } },
+
+        { id:'steward', label:'Hermon the Steward', x:0.735, y:0.55, type:'dialogue', kind:'clue', required:false,
+          grants:['knows_estate'],
+          content:{ title:'Hermon the Steward',
+            desc:"Your patron's dispensator, a Greek slave who keeps the household's accounts. He was kind to you when you were small, and he still is.",
+            lines:[
+              "So he is sending you after the tribune. Be careful. Everyone in Rome is watching everyone else this summer.",
+              "Do you know why the master hates this law so much? Come, you have seen the books. The estate on the Via Tiburtina, half a day out of the city. Most of it is public land, ager publicus. His grandfather took it up after the war with Hannibal, when the land lay empty, and the family has worked it ever since.",
+              "The law would let him keep five hundred iugera and a little more for his sons. He holds a great deal more than that. More than nearly any man in Rome.",
+              "If you want to understand what this is about, ride out the Via Tiburtina and look at it. Tell Damon, the overseer, that Hermon sent you."
+            ] } },
+
+        { id:'figs', label:'A Bowl of Figs', x:0.810, y:0.77, type:'object', kind:'trivial', required:false,
+          content:{ title:'A Bowl of Figs',
+            text:"Fresh figs on a silver dish. Old Cato once dropped a fig on the floor of the Senate and told the senators it had been picked in Carthage three days before. That was how close the enemy was, he said. Three years later Carthage was burned to the ground. These figs are from the master's own estate, and nobody has burned anything for them yet." } },
+
+        { id:'satchel', label:'Your Satchel', x:0.905, y:0.87, type:'object', kind:'ambiance', required:false,
+          content:{ title:'Your Satchel',
+            text:"Everything you own that matters: a stylus, a set of blank wax tablets, a reed pen, a pot of ink, a few denarii, and the felt cap you were given the day you were freed. A freedman wears his patron's name for life. A good client comes when called, votes as he is told, and owes his patron his loyalty. Everyone knows the arrangement. It is how Rome works." } },
+
+        { id:'daos', label:'Daos the Doorkeeper', x:0.955, y:0.65, type:'dialogue', kind:'ambiance', noPoi:true, required:false,
+          content:{ title:'Daos the Doorkeeper',
+            desc:"The old door slave, chained to his post by custom more than by iron. He grins at you.",
+            lines:[
+              "The master is waiting on you by the tablinum. Your tablets are on his table, by the pool.",
+              "You can look around by dragging left and right. Touch anything that catches your eye: people, objects, documents. Everything you learn goes into your notebook.",
+              "The golden lights are people and evidence. Those matter for your report. The pale blue lights are bits of everyday Roman life. Read them if you are curious, skip them if you are in a hurry."
+            ] } },
+
+        { id:'mirror', label:'A Bronze Mirror', x:0.110, y:0.78, type:'object', kind:'trivial', required:false,
+          content:{ title:'A Bronze Mirror',
+            text:"A polished bronze mirror on a stand. There are no glass mirrors yet, so your face looks back at you a little golden and blurry: clean-shaven, as Roman men are these days, hair cut short.\n\nEvery Roman citizen man has a name in three parts. A first name, like Publius. A family name, like Cornelius. And often a nickname that the family keeps, like Scipio, which means 'walking stick.' When you were freed, you took your master's first two names and kept your old slave name on the end. Publius Cornelius, and then the name your mother gave you.\n\nGirls get only the family name. Every daughter of the Cornelii is Cornelia. If there are three, they are numbered." } },
+
+        { id:'phoebe', label:'The Old Nurse', x:0.655, y:0.58, type:'dialogue', kind:'ambiance', noPoi:true, required:false,
+          content:{ title:'Phoebe the Nurse',
+            desc:"An old slave woman folding linen at a chest. She is the nurse who raised half the children of this house, you among them.",
+            lines:[
+              "Look at you, in a citizen's toga. I remember you in nothing but a tunic and a scraped knee.",
+              "The toga is for citizens only, you know. A slave may not wear one, and a foreigner may not. White wool, and heavy, and you need someone to help you put it on. The senators have a purple stripe on theirs, so you know who to step aside for.",
+              "When a freeborn boy is born, they hang a bulla round his neck, a little gold locket against the evil eye. He wears it until he is about sixteen, then puts on the plain white toga of a man. A girl wears a little moon charm, and takes it off the night before she marries.",
+              "Marries at fourteen, mostly. The master's daughter was promised at twelve. Then she goes from her father's house to her husband's, and if she is a good matron she holds the keys to the whole household.",
+              "Women cannot vote or sit in the Senate. But do not believe anyone who tells you we have no say in Rome. Who do you think the senators go home and talk to at night?"
+            ] } },
+
+        { id:'loom', label:'The Loom', x:0.855, y:0.45, type:'object', kind:'trivial', required:false,
+          content:{ title:'The Loom',
+            text:"A tall upright loom stands in the atrium, where every visitor can see it. Clay weights hang from the threads to keep them tight. In the old families the lady of the house still weaves here, or at least makes sure she is seen to.\n\nEvery Roman knows what a good woman's gravestone should say. One carved in Rome in these very years, for a woman named Claudia, ends like this: 'She loved her husband with all her heart. She bore two sons. She was charming in speech and graceful in her walk. She kept the house. She worked wool.'" } },
+
+        { id:'skip_to_forum', label:'Skip to the Forum', x:0.92, y:0.12, type:'navigation', goto:'forum_day', dev:true }
+      ],
+
+      progression: {
+        required:   ['nasica', 'commission'],
+        buttonText: 'Go Down to the Forum →',
+        nextScene:  'forum_day'
+      }
+    },
+
+    forum_day: {
+      id: 'forum_day',
+      name: 'The Forum Romanum',
+      subtitle: 'Midsummer, 133 BC',
+      actLabel: 'Act II - The City',
+      image: 'art/forum_day.jpg',
+      hotspots: [
+        { id:'to_subura', label:'To the Subura', x:0.030, y:0.82, type:'navigation', goto:'subura_insula' },
+
+        { id:'curia', label:'The Senate House', x:0.105, y:0.30, type:'object', kind:'clue', required:false,
+          content:{ title:'The Curia Hostilia',
+            text:"The Senate house, dark brick and old bronze doors. Three hundred men meet inside, nearly all of them landowners, every one of them a former magistrate who will sit there for life. They do not pass laws. Only the Assemblies of the People do that. But for as long as anyone remembers, nobody has brought a law to the People without asking the Senate first.\n\nTiberius Gracchus did not ask." } },
+
+        { id:'graffiti', label:'Writing on the Wall', x:0.200, y:0.48, type:'object', kind:'clue', required:false,
+          content:{ title:'Writing on the Wall',
+            text:"Charcoal scrawls cover the plaster of the portico, some old, some still smudgy.\n\nTI GRACCHE REDDE AGRVM PVBLICVM PAVPERIBVS\nTiberius Gracchus, give the public land back to the poor.\n\nAnd lower, in a clumsier hand: WE FOUGHT FOR IT.\n\nThe writing goes on for the whole length of the wall, on the columns, on the base of a statue. Nobody paid for this." } },
+
+        { id:'tiberius', label:'The Tribune at the Rostra', x:0.305, y:0.40, type:'dialogue', kind:'clue', required:true,
+          content:{ title:'Tiberius Gracchus',
+            people:['Tiberius Gracchus'],
+            desc:"On the speakers' platform, decorated with the bronze beaks of captured warships, a young man in a white toga is speaking. He does not stand still like the old senators do. He walks the platform, and his voice carries all the way across the Forum.",
+            lines:[
+              "The wild beasts that roam over Italy have every one of them a cave or lair to lurk in. But the men who fight and die for Italy enjoy the common air and light, and nothing else.",
+              "Houseless and homeless, they wander about with their wives and children. Their generals lie when they tell the soldiers in battle to fight for their tombs and the shrines of their fathers. Not one of them has a family altar. Not one has an ancestral tomb.",
+              "They fight and die to keep other men in wealth and luxury. They are called the masters of the world, and they have not a single clod of earth that is their own!",
+              "The land belongs to the Roman People. I ask only that the People take back what is theirs, and give it to the men who bled for it."
+            ] } },
+
+        { id:'octavius_bench', label:'The Empty Bench', x:0.430, y:0.74, type:'object', kind:'clue', required:false,
+          content:{ title:'The Empty Bench',
+            text:"The tribunes' bench stands at the foot of the Rostra. One place on it is empty.\n\nIt belonged to Marcus Octavius, tribune, who vetoed the land law. Tiberius begged him in public to withdraw it. He would not. So Tiberius put a new question to the Assembly: should a tribune who works against the People stay in office? The tribes voted, one by one. When the eighteenth tribe voted yes, Octavius was no longer a tribune.\n\nNo tribune had ever been removed before. The crowd dragged him off the platform. A slave who threw himself in front of his master had his eyes torn out." } },
+
+        { id:'octavius', label:'Marcus Octavius', x:0.468, y:0.52, type:'dialogue', kind:'clue', noPoi:true, required:false,
+          content:{ title:'Marcus Octavius',
+            desc:"A serious man in a plain toga, standing apart from the crowd. People step out of his way without meeting his eye.",
+            lines:[
+              "You are wondering if I am bitter. Tiberius and I were friends. We still are, I think, in some way neither of us understands.",
+              "I hold public land. Yes. He offered to pay me for my loss out of his own pocket, in front of everyone. I said no, and he took it as an insult.",
+              "But listen. The veto exists so that one tribune can stop the others when the crowd is hot. If the People can throw out any tribune who displeases them, what is a tribune for? He did not break the law. He found a way around it, in front of everybody, and they cheered.",
+              "Whoever comes after him will remember how it was done."
+            ] } },
+
+        { id:'rustics', label:'Men from the Country', x:0.555, y:0.66, type:'dialogue', kind:'clue', required:false,
+          grants:['knows_estate'],
+          content:{ title:'Men from the Country',
+            people:['Sextus Lollius'],
+            desc:"A knot of sunburned men in rough brown tunics, dusty to the knees, eating bread out of their cloaks. Country men, not city men.",
+            lines:[
+              "Two days on foot from Reate to get here. I am Sextus Lollius, tribe Quirina, and when they vote, my vote counts the same as a senator's, by Hercules.",
+              "Only a man has to be here to cast it. That is the trouble. Every year the vote is at harvest, and every year the rich men's slaves bring in the harvest and the poor men have to choose: bring in their grain, or come to Rome and vote.",
+              "Half my village stayed home this time. Can't eat a vote.",
+              "You want to see why we are poor? Walk out the Via Tiburtina, through the city gate there. Half a day out, the great estates begin. Look who is working the fields. It isn't Romans.",
+              "There is a man in the Subura gathering the country men, tribe by tribe, so we know who has come in. Arrius. Ask anyone in the courtyards there."
+            ] } },
+
+        { id:'temple_castor', label:'Temple of Castor', x:0.640, y:0.25, type:'object', kind:'ambiance', required:false,
+          content:{ title:'The Temple of Castor',
+            text:"The temple of the twin horsemen, Castor and Pollux, who rode out of nowhere to save Rome in battle and watered their horses at the spring below. The money-changers keep their strongboxes in the cellars underneath. Even the gods in Rome have business to attend to." } },
+
+        { id:'philo', label:'Philo the Money-Changer', x:0.685, y:0.60, type:'dialogue', kind:'clue', required:false,
+          content:{ title:'Philo the Money-Changer',
+            people:['Philo the Money-Changer'],
+            desc:"A Greek freedman behind a table of scales, coins stacked in neat columns.",
+            lines:[
+              "Gold from Pergamum! That is all anyone wants to talk about. King Attalus died this spring and left his whole kingdom to the Roman People in his will. Cities, treasure, everything.",
+              "The Senate has always decided what to do with a foreign kingdom. Always. But Gracchus stood up and said the treasure should go to the new farmers, to buy oxen and ploughs and seed, so they can make their lots pay. And that the People, not the Senate, should decide about the cities of Asia.",
+              "You can see the senators' faces when he says it. It is not only the money. It is who gets to decide.",
+              "Me? Prices are up since the slave war in Sicily stopped the grain ships. A man buying bread does not care who rules Pergamum."
+            ] } },
+
+        { id:'temple_saturn', label:'Temple of Saturn', x:0.800, y:0.25, type:'object', kind:'clue', required:false,
+          content:{ title:'The Temple of Saturn',
+            text:"The Treasury of the Roman People is kept in the strongrooms under the Temple of Saturn, guarded by the quaestors. Every war Rome fights is paid for from here, and every conquest pays back into it. If the treasure of Pergamum ever reaches Rome, this is where it will go.\n\nWho holds the key to this door has always been the Senate's business." } },
+
+        { id:'crier', label:'A Man on a Barrel', x:0.875, y:0.57, type:'dialogue', kind:'herring', noPoi:true, required:false,
+          debunk:"There was no Etruscan army. The men pouring into Rome that summer were voters from the country tribes, and most of them came armed with nothing but a cloak and a loaf of bread. Tiberius did go about the city with a crowd of supporters around him, and by the last day some of them carried staves. When the killing came, it was the senators' men who brought the clubs.",
+          content:{ title:'A Man on a Barrel',
+            desc:"A red-faced man shouting to anyone who will stop.",
+            lines:[
+              "Citizens! Do you know who is camping in the Subura? Etruscans! Thousands of them, armed to the teeth, brought down from the hills by Gracchus!",
+              "Mark me, the day of the vote he will march them up the Capitol and make himself king! I have it from a man who has it from a senator's own slave!"
+            ] } },
+
+        { id:'lacus_curtius', label:'A Paved Hollow', x:0.470, y:0.92, type:'object', kind:'trivial', required:false,
+          content:{ title:'The Lacus Curtius',
+            text:"A small fenced patch of old paving in the middle of the Forum. The story goes that a chasm once opened here, and the soothsayers said it would close only when Rome threw in her greatest treasure. A young soldier named Curtius rode his horse into it, fully armed, saying Rome had no greater treasure than a brave citizen. The earth closed over him. People toss coins in for luck." } },
+
+        { id:'stands', label:'Wooden Stands', x:0.905, y:0.36, type:'object', kind:'trivial', required:false,
+          content:{ title:'Wooden Stands',
+            text:"Carpenters are hammering together tiers of wooden seats at the end of the Forum. A great family is holding funeral games for a dead father: a feast for the people, and pairs of gladiators fighting here, in the middle of the city, in front of the Senate house.\n\nThere is no stone arena in Rome. The Colosseum will not be built for another two hundred years. Families who can pay rent the best seats; the poor watch from rooftops and steps.\n\nAbout ten years from now a tribune will tear stands like these down in the night so the poor can watch for free. His name will be Gracchus." } },
+
+        { id:'vestal', label:'A Woman in White', x:0.245, y:0.62, type:'dialogue', kind:'ambiance', noPoi:true, required:false,
+          content:{ title:'Claudia, Vestal Virgin',
+            desc:"A woman in a long white robe, her hair bound with woollen ribbons under a white veil. A lictor walks ahead of her clearing the way, and people step aside and bow their heads. A Vestal Virgin.",
+            lines:[
+              "You may look. Everyone does. I serve Vesta, goddess of the hearth. In her round temple at the end of the Forum, six of us keep her sacred fire burning day and night. If it ever goes out, Rome is in danger.",
+              "They choose us as girls, between six and ten years old, and we serve for thirty years. A Vestal may own property and make a will without any man's permission. A lictor walks before me as he would before a consul. If a condemned man meets one of us by chance on the way to his execution, he goes free.",
+              "My name is Claudia. My sister, the tribune's wife, is Claudia too. Every daughter of the Claudii is Claudia. Romans give their girls the family name and number them if they must: the elder, the younger, Tertia, the third.",
+              "Ten years ago, when my father rode in his triumph, a tribune tried to drag him down from his chariot. I climbed up and rode beside him through the city, and no one dared lay a hand on a Vestal. So do not tell me women have no part in Roman politics."
+            ] } },
+
+        { id:'sundial', label:'A Sundial on a Pillar', x:0.390, y:0.47, type:'object', kind:'trivial', required:false,
+          content:{ title:'A Sundial on a Pillar',
+            text:"Rome's first sundial was carried home as war loot from the city of Catania in Sicily, about a hundred and thirty years ago, and set up here by the Rostra. Nobody noticed that Catania is much farther south than Rome. For ninety-nine years the whole city told the time by a sundial that was wrong. A newer one, made for Rome, stands here now.\n\nRomans split the daylight into twelve hours, sunrise to sunset. So a summer hour is long, and a winter hour is short." } },
+
+        { id:'lictors', label:"The Consul's Lictors", x:0.770, y:0.62, type:'object', kind:'ambiance', required:false,
+          content:{ title:"The Consul's Lictors",
+            text:"A line of men pushes through the crowd, each carrying on his shoulder a bundle of rods tied with red straps: the fasces. They are lictors, and they walk ahead of the consul, the highest official in Rome. There are two consuls, elected every year, so that no one man ever holds all the power. Each has twelve lictors.\n\nThe rods mean the consul can have a man beaten. Outside the city, an axe is tied into the bundle, meaning he can have a man put to death. Inside the city the axes are taken out. Here, a Roman citizen has the right to appeal to the People first." } },
+
+        { id:'chickpeas', label:'The Chickpea Seller', x:0.955, y:0.83, type:'object', kind:'trivial', required:false,
+          content:{ title:'The Chickpea Seller',
+            text:"A girl with a brazier is roasting chickpeas and selling them by the cupful, hot, for a copper. The smell drifts across half the Forum. She is doing better business today than any senator." } },
+
+        { id:'to_palatine', label:'Up to the Palatine', x:0.520, y:0.20, type:'object', kind:'ambiance', required:false,
+          goto:'gracchus_house', gotoText:'Climb to the House of Gracchus',
+          gotoRequires:['arrius_invite'],
+          gotoLocked:"The House of the Gracchi is up there, among the senators' houses. A freedman of Scipio Nasica cannot just knock on that door. You would need someone to bring you in.",
+          content:{ title:'The Palatine Hill',
+            text:"Above the Forum the Palatine rises in terraces, crowded with the great houses of the oldest families. Your patron's house is up there. So is the house of the Sempronii Gracchi, where a line of men has been coming and going all morning." } },
+
+        { id:'to_tiburtina', label:'The Road out of the City', x:0.975, y:0.62, type:'navigation', goto:'tiburtina_estate',
+          requires:['knows_estate'] }
+      ]
+    },
+
+    subura_insula: {
+      id: 'subura_insula',
+      name: 'The Subura',
+      subtitle: 'A Tenement Courtyard',
+      actLabel: 'Act II - The City',
+      image: 'art/subura_insula.jpg',
+      hotspots: [
+        { id:'subura_back', label:'Back to the Forum', x:0.025, y:0.80, type:'navigation', goto:'forum_day' },
+
+        { id:'compitum', label:'The Crossroads Shrine', x:0.085, y:0.52, type:'object', kind:'ambiance', required:false,
+          content:{ title:'The Crossroads Shrine',
+            text:"A little shrine to the Lares of the crossroads, the gods of the neighbourhood. Slaves and free poor tend it together, and at the festival in winter every household hangs a wool doll here, one for each free person and a woolen ball for each slave. Down here, the gods keep count of everybody." } },
+
+        { id:'naevia', label:'A Woman Spinning', x:0.190, y:0.65, type:'dialogue', kind:'clue', required:false,
+          content:{ title:'Naevia',
+            people:['Naevia'],
+            desc:"A widow in a faded stola, spinning wool on a drop spindle in the doorway of a ground-floor room. A boy of about twelve sits beside her sorting the wool.",
+            lines:[
+              "My husband went to Spain with the legions nine years ago. Spain, then Spain again. The war there never ends. In the end it was the Spanish war that kept him.",
+              "We had a little farm near Praeneste. While he was gone I could not work it alone, and the debts came, and our neighbour, a senator's man, was always so kind about lending. When he came for the land, he was kind about that too.",
+              "Now I spin wool for a contractor at two asses a pound, and we live in this room, and the rent goes up every spring because there are more of us every spring.",
+              "My boy will be old enough for the legions in five years. They will not take him. A boy with no property cannot serve. If the law passes, if there is land again, he could have a farm. A farm he could never be made to sell."
+            ] } },
+
+        { id:'grain_jar', label:'An Empty Grain Jar', x:0.320, y:0.84, type:'object', kind:'clue', required:false,
+          content:{ title:'An Empty Grain Jar',
+            text:"A tall clay jar by Naevia's door, the kind a family keeps its grain in. You tip it. Empty but for dust.\n\nThe grain ships from Sicily have been short for two years, ever since the slaves on the great Sicilian estates rose up in revolt. The price of a measure of wheat in the Subura has nearly doubled." } },
+
+        { id:'knucklebones', label:'Children at Play', x:0.405, y:0.90, type:'object', kind:'trivial', required:false,
+          content:{ title:'Children at Play',
+            text:"Three small children crouch in the dust tossing knucklebones, sheep's ankle bones, and arguing about the score. The best throw is called the Venus, when all four land on different sides. The worst is called the Dog. One of them is accusing another of cheating with a loaded bone. Some things in Rome never change." } },
+
+        { id:'arrius', label:'The Veteran with the Lists', x:0.490, y:0.62, type:'dialogue', kind:'clue', required:false,
+          grants:['arrius_invite'],
+          content:{ title:'Quintus Arrius',
+            people:['Quintus Arrius'],
+            desc:"A grizzled man with a scar down one arm, sitting at a table in the courtyard, writing names on wax tablets in big careful letters while men queue in front of him.",
+            lines:[
+              "Name? Tribe? Next. Sorry, friend, you want something? I am Quintus Arrius. Twelve years a soldier.",
+              "I was at Numantia, in Spain, four years ago. Twenty thousand of us trapped in a ravine by the Numantines, and the consul could not get us out. It was Tiberius Gracchus who rode into their town and talked them into letting us walk home alive. They trusted him because they had trusted his father.",
+              "The Senate tore up the treaty. They called it a disgrace. They would rather we had died with honour, I suppose.",
+              "When I came home, my farm in the Sabine hills was gone. My father was dead, the debt was called in, and a rich man owned the whole valley. Twelve years in the legions to win Spain for Rome, and not a foot of Italy to show for it.",
+              "So I keep lists. Rome votes by tribes: thirty-five tribes, and each casts one vote. Four of them are the city. Thirty-one are the countryside. If enough country men come in, the country tribes carry the vote.",
+              "You write a fair hand? The land commission needs scribes to copy the claims. Go up to the House of the Gracchi on the Palatine and tell them Arrius sent you."
+            ] } },
+
+        { id:'tribe_lists', label:'The Tablets on the Table', x:0.560, y:0.73, type:'document', kind:'clue', required:false,
+          content:{ title:'The Tribe Lists',
+            text:"A stack of wax tablets, filled edge to edge in Arrius' big careful letters. Each one is headed with the name of a country tribe: POLLIA. QVIRINA. SABATINA. CLVSTVMINA. Under each, the names of men who have come into the city for the vote, and where they are sleeping.\n\nSEX. LOLLIVS, of Reate, by the Fountain of the Camenae.\nC. TITIVS, of Tusculum, with his brother.\nL. APRONIVS, veteran of Numantia, in this courtyard.\n\nTwo hundred and twelve names. Every name is a man who walked to Rome to vote." } },
+
+        { id:'crack', label:'A Crack in the Wall', x:0.645, y:0.18, type:'object', kind:'ambiance', required:false,
+          content:{ title:'A Crack in the Wall',
+            text:"A crack runs from the third floor to the roof, wide enough to put your hand in, propped with timbers. Tenements like this one are built cheap and built tall, five storeys of rubble and timber, and every year in Rome a few of them fall down or burn. The top floors cost least. The people who live there have farthest to run." } },
+
+        { id:'gnaeus', label:'The Rent Collector', x:0.735, y:0.60, type:'dialogue', kind:'clue', required:false,
+          content:{ title:'Gnaeus the Rent Collector',
+            people:['Gnaeus the Rent Collector'],
+            desc:"A heavy man with a ledger tablet and a stick, working his way door to door.",
+            lines:[
+              "Rent is due on the Kalends, and today is the Kalends. You living here? No? Then do not get in my way.",
+              "The owner is a knight. Lives on the Quirinal and has never set foot in this courtyard. I collect, I take my share, I pay him the rest. That is the whole of it.",
+              "Up every year, yes. Every year more of them come in from the country with their families and their bundles, and every one of them needs a room. I could let that staircase twice over.",
+              "Between you and me? Land in the country is the best thing that could happen to this place. Half these people never wanted to be here."
+            ] } },
+
+        { id:'vote_seller', label:'A Man Selling Votes', x:0.820, y:0.72, type:'dialogue', kind:'herring', noPoi:true, required:false,
+          debunk:"Buying votes really was a problem in Roman elections, and the Senate passed law after law against it. But nothing tied Tiberius Gracchus to bribery. Six years earlier, in 139 BC, a tribune named Gabinius had passed a law giving Romans a secret written ballot, precisely so that powerful men could no longer watch how their clients and tenants voted. The sneering man in the courtyard was offering to sell a vote that nobody could check.",
+          content:{ title:'A Man Selling Votes',
+            desc:"A sharp-faced man lounging against a column, who catches your eye and winks.",
+            lines:[
+              "You look like a man with a patron. Tell him this from me: everyone in this courtyard has been bought. Gracchus pays five denarii a vote, I have seen the purses.",
+              "Of course, I would vote any way your patron likes for six."
+            ] } },
+
+        { id:'fullery', label:'The Fullery', x:0.875, y:0.68, type:'object', kind:'trivial', required:false,
+          content:{ title:'The Fullery',
+            text:"A fuller's shop opens onto the courtyard, where men stand knee-deep in vats treading woollen cloth to clean it. The cleaning agent is urine, collected in pots on street corners. Your eyes water from across the courtyard. The fuller waves cheerfully. He has long since stopped noticing." } },
+
+        { id:'fountain', label:'The Public Fountain', x:0.960, y:0.62, type:'object', kind:'trivial', required:false,
+          content:{ title:'The Public Fountain',
+            text:"A stone basin with water running into it from a lead pipe, and a queue of women with jars. The water is cold and clean. It comes from the new aqueduct, the Aqua Marcia, built just a few years ago, that brings water sixty miles from the springs of the Anio valley. Rome can carry a river across the hills. It has not yet found a way to keep a roof over these people's heads." } },
+
+        { id:'tertia', label:'A Girl with a Water Jar', x:0.665, y:0.68, type:'dialogue', kind:'clue', required:false,
+          content:{ title:'Tertia',
+            people:['Tertia'],
+            desc:"A girl of about eleven, barefoot, a water jar balanced on her head, watching everything with quick eyes.",
+            lines:[
+              "I'm Tertia. It means 'Third.' My sisters are Prima and Secunda. Father ran out of names.",
+              "I carry water up four flights of stairs twelve times a day, so I know every door in this building. Arrius pays me a copper to run messages for him: who's come in from the country, which courtyard they're sleeping in.",
+              "My brothers went to the schoolmaster to learn their letters. I learned mine on the steps, from Arrius' tablets. I can read every name on them. Don't tell my mother.",
+              "In two or three years they'll marry me off. Girls can't vote. But before I go, I'm going to see one vote with my own eyes."
+            ] } },
+
+        { id:'food_counter', label:'A Hot-Food Counter', x:0.345, y:0.64, type:'object', kind:'trivial', required:false,
+          content:{ title:'A Hot-Food Counter',
+            text:"A shop counter opens onto the courtyard with big clay pots sunk into it, steaming. For a copper you get a bowl of puls, a thick porridge of wheat or barley, with beans in it if you are lucky, and a bit of sausage if you are rich.\n\nMost rooms in the tenement have no kitchen at all. A cooking fire on the fourth floor is how whole buildings burn down. So the Subura eats out. Everything gets a splash of garum, a salty sauce made from fish guts left to rot in the sun. Romans love it." } },
+
+        { id:'chamber_pot', label:'Look Out Below', x:0.425, y:0.27, type:'object', kind:'trivial', required:false,
+          content:{ title:'Look Out Below',
+            text:"A shutter bangs open on the second floor and a woman empties a chamber pot into the courtyard. Everyone below has already jumped clear. There is no plumbing up there; the aqueduct water stops at the fountain on the ground.\n\nRoman law says that if something thrown from a window hurts a passer-by, whoever lives in that room has to pay. That there is a law about it tells you how often it happens." } }
+      ]
+    },
+
+    tiburtina_estate: {
+      id: 'tiburtina_estate',
+      name: 'The Via Tiburtina',
+      subtitle: 'An Estate, Half a Day from Rome',
+      actLabel: 'Act II - The Country',
+      image: 'art/tiburtina_estate.jpg',
+      hotspots: [
+        { id:'old_tullus', label:'An Old Man at a Fence', x:0.070, y:0.65, type:'dialogue', kind:'clue', required:false,
+          content:{ title:'Old Tullus',
+            people:['Old Tullus'],
+            desc:"A bent old man leaning on his hoe by a crooked fence, guarding a little patch of beans and an olive tree as if they might walk off.",
+            lines:[
+              "Seven iugera. That is what is left. My grandfather's grandfather had this from the colony, and I mean to die on it.",
+              "Used to be thirty families in this valley. Their boys went to Spain, to Africa, to Macedonia. Some never came back. The ones who did found the farm in weeds and the debts doubled. And the big estate was always ready to buy.",
+              "And if a man will not sell? The estate's oxen get into his barley. His boundary stone walks fifty feet in the night. Last winter somebody threw a dead dog down my well.",
+              "Go to law against a Scipio? Me? Ha. Who would the praetor believe?"
+            ] } },
+
+        { id:'olive_tree', label:'The Olive Tree', x:0.050, y:0.30, type:'object', kind:'trivial', required:false,
+          content:{ title:'The Olive Tree',
+            text:"An old olive tree, twisted and silver-green, older than Old Tullus. Olives are the most useful thing a Roman farm grows. Their oil is for cooking, for burning in clay lamps at night, and for washing: Romans have no soap, so they rub oil on their skin and scrape it off, dirt and all, with a curved metal tool called a strigil.\n\nAn olive tree takes years to bear fruit and can live for centuries. A family that plants one expects to stay." } },
+
+        { id:'ruined_farm', label:'A Ruined Farmhouse', x:0.165, y:0.47, type:'object', kind:'clue', required:false,
+          content:{ title:'A Ruined Farmhouse',
+            text:"A small farmhouse of mud brick on stone footings, its roof fallen in and grass growing in the hearth. In the rubble you find a clay loom weight and a child's toy, a little terracotta horse with one leg snapped off.\n\nSomebody lived here once, wove cloth here, raised children here. Now it stands in the corner of a great field that rolls all the way to the villa on the hill." } },
+
+        { id:'old_tomb', label:'A Tomb in the Vineyard', x:0.255, y:0.60, type:'object', kind:'clue', required:false,
+          content:{ title:'A Tomb in the Vineyard',
+            text:"A small family tomb stands in the middle of the vines, its stone weathered smooth. The inscription is old-fashioned Latin: the Opsii, father, mother, sons.\n\nThe Opsii are gone. Their dead are still here, in the middle of somebody else's vineyard, and nobody brings them offerings anymore. Tiberius said it at the Rostra: the men who fight for Italy have no family tomb. Here is one, and the family is gone." } },
+
+        { id:'boundary_stone', label:'A Boundary Stone', x:0.335, y:0.82, type:'object', kind:'clue', required:false,
+          content:{ title:'A Boundary Stone',
+            text:"A squat stone post at the edge of the vineyard, carved with old letters: AGER PVBLICVS. Public land. Land belonging to the Roman People.\n\nThere are scrape marks in the dirt around its base, and a pale ring where it used to stand, a good distance off. Somebody has moved it." } },
+
+        { id:'damon', label:'The Overseer', x:0.440, y:0.58, type:'dialogue', kind:'clue', required:false,
+          grants:['saw_estate'],
+          content:{ title:'Damon the Overseer',
+            people:['Damon the Overseer'],
+            desc:"The vilicus, the slave who runs the estate for its owner, in a good tunic, a whip coiled at his belt.",
+            lines:[
+              "Hermon sent you? Then you can see whatever you want. The master likes his books kept clean.",
+              "Three thousand iugera, give or take. Wheat on the flats, vines and olives on the slopes, sheep in the hills. Most of it is public land. The family took it up after the Hannibal war, when there was nobody left to farm it. They are supposed to pay the state a share of the harvest. Nobody has asked for it in my lifetime.",
+              "Free labourers? Not if you can help it. A free man can be called up for the legions the day before harvest. A slave cannot. A slave never goes to war, and his children belong to the estate.",
+              "When Gracchus' surveyors come with their measuring poles, that is the end of this. Five hundred iugera, and the rest cut up into little farms for anybody with a toga. The master will not let that happen. You can tell him I said so."
+            ] } },
+
+        { id:'chain_gang', label:'The Chained Gang', x:0.560, y:0.64, type:'object', kind:'clue', required:false,
+          content:{ title:'The Chained Gang',
+            text:"A line of men hoeing between the rows, chained at the ankle, two by two. Spanish, mostly, by their look and the scraps of speech you catch. Prisoners from the wars.\n\nThe legions that conquered Spain took them prisoner and sent them here to be sold. The farmers who fought in those legions came home to find these men working the land they used to own." } },
+
+        { id:'ergastulum', label:'A Low Stone Building', x:0.665, y:0.45, type:'object', kind:'clue', required:false,
+          content:{ title:'The Ergastulum',
+            text:"A long low building half sunk into the ground, with slits for windows too high to reach. It is the ergastulum, where the chained slaves are locked in at night. You can smell it from here.\n\nOn the great estates in Sicily, men locked in places like this one rose up three years ago and killed their masters. They are fighting still." } },
+
+        { id:'villa', label:'The Villa on the Hill', x:0.785, y:0.22, type:'object', kind:'clue', required:false,
+          content:{ title:'The Villa',
+            text:"Up on the hill, the owner's villa: white walls, a long colonnade, a garden, a fishpond, a view of the whole valley. Your patron comes out here perhaps twice a year, to escape the heat of the city.\n\nEverything you can see from that colonnade, he thinks of as his." } },
+
+        { id:'syrus', label:'The Shepherd', x:0.880, y:0.62, type:'dialogue', kind:'clue', required:false,
+          content:{ title:'Syrus the Shepherd',
+            people:['Syrus'],
+            desc:"A young slave shepherd leaning on his crook by the flock, a long way from the overseer.",
+            lines:[
+              "They call me Syrus, because I come from Syria. That is not my name. Nobody here has asked my name.",
+              "You have heard about Sicily? A slave named Eunus, a Syrian like me, led the slaves on the great estates in revolt. Thousands of them. They took the city of Enna, and Eunus put on a diadem and called himself King Antiochus. For three years Rome has not been able to beat them.",
+              "A king of slaves! The masters here are afraid of us. That is why the chains.",
+              "This law of your tribune. It gives land to Roman citizens. Good. It gives nothing to me. When the free men get their farms, someone will still sell me to the next estate."
+            ] } },
+
+        { id:'herius', label:'A Muleteer on the Road', x:0.950, y:0.68, type:'dialogue', kind:'clue', required:false,
+          content:{ title:'Herius the Marsian',
+            people:['Herius the Marsian'],
+            desc:"A man leading a string of mules loaded with jars down the Via Tiburtina, toward Rome. He speaks Latin with a mountain accent.",
+            lines:[
+              "I am a Marsian, from the mountains past Tibur. An ally of Rome, as they say. We fight in every one of Rome's wars, side by side with the legions. More of us than of them, some years.",
+              "My family has farmed a piece of Roman public land for sixty years. Our grandfathers were given leave to settle it. Now the Romans want to measure it again and give it to Romans.",
+              "And who speaks for us when the commissioners come? We cannot vote in your Assembly. We are allies when there is fighting to do. When there is land to share, we are foreigners.",
+              "Your tribune means well for his people. I do not see that he means anything for mine."
+            ] } },
+
+        { id:'vines', label:'The Vines', x:0.320, y:0.48, type:'object', kind:'ambiance', required:false,
+          content:{ title:'The Vines',
+            text:"Row after row of vines trained on stakes, heavy with green grapes. Wine is worth far more than wheat, and a great estate with slaves to tend it can wait the years it takes a vineyard to come into bearing. A small farmer with a family to feed this winter cannot." } },
+
+        { id:'hare', label:'A Hare', x:0.610, y:0.88, type:'object', kind:'trivial', required:false,
+          content:{ title:'A Hare',
+            text:"A hare bolts out of the stubble almost under your feet and zigzags away across the field. It has the run of the whole three thousand iugera, and owes nobody anything for it." } },
+
+        { id:'vilica', label:'A Woman with a Basket', x:0.730, y:0.65, type:'dialogue', kind:'clue', required:false,
+          content:{ title:'Philumena',
+            people:['Philumena'],
+            desc:"A slave woman carrying a basket of bread and a jug of water out to the field gang. She is the vilica, the overseer's partner, who runs the kitchen, the stores, the spinning, and the sick room.",
+            lines:[
+              "Philumena. Damon runs the fields; I run everything else. The master's farming book says a vilica should not gossip or wander about the neighbours. I'm talking to you anyway.",
+              "Slaves can't marry, under the law. Damon and I are together because the master allows it. Our children belong to the estate, the way the lambs do.",
+              "If this law comes and the estate is cut down, they won't free us. They'll sell us. At a sale, families get split up. I've seen it.",
+              "Do I want the poor to have land? I do. I would just like somebody, once, to ask what happens to us."
+            ] } },
+
+        { id:'via_road', label:'The Paved Road', x:0.905, y:0.94, type:'object', kind:'trivial', required:false,
+          content:{ title:'The Paved Road',
+            text:"The Via Tiburtina, paved with big fitted blocks of hard grey stone. Roman roads are built in layers like a cake: a deep trench, then rubble, then gravel, then sand, then paving stones on top, curved so rain runs off to the sides. They run as straight as the engineers can make them, so armies can march fast.\n\nEvery Roman mile, a thousand paces, a milestone tells you how far you are from Rome, in Roman numerals. I is one, V is five, X is ten. The stone up the road says XVI: sixteen miles." } },
+
+        { id:'estate_back', label:'Back to Rome', x:0.985, y:0.86, type:'navigation', goto:'forum_day' }
+      ]
+    },
+
+    gracchus_house: {
+      id: 'gracchus_house',
+      name: 'House of the Gracchi',
+      subtitle: 'The Palatine, Afternoon',
+      actLabel: "Act III - The Tribune's House",
+      image: 'art/gracchus_house.jpg',
+      hotspots: [
+        { id:'dusk_door', label:'The Street Door', x:0.035, y:0.50, type:'object', kind:'ambiance', required:false,
+          goto:'vigil_night', gotoText:'Stay Until Nightfall',
+          gotoRequires:['saw_estate', 'gaius'],
+          gotoNote:"Once night falls, you will not see the city by daylight again.",
+          gotoLocked:{
+            saw_estate:"Everyone you have asked says this began out on the great estates along the Via Tiburtina. You have not seen them for yourself yet, and after tonight there will be no time. The road out of the city leaves from the Forum.",
+            gaius:"You came here to learn what the tribune's people intend. You have not yet spoken to anyone who sits on the land commission."
+          },
+          content:{ title:'The Street Door',
+            text:"Through the open door, the street is filling up. Men keep arriving and not leaving: country men with bundles, veterans, whole families. They sit along the walls of the houses opposite as if they mean to stay all night." } },
+
+        { id:'cornelia', label:'The Mother of the Gracchi', x:0.130, y:0.62, type:'dialogue', kind:'clue', required:false,
+          content:{ title:'Cornelia',
+            people:['Cornelia'],
+            desc:"A grey-haired woman seated very straight in a high-backed chair, reading. She is the daughter of Scipio Africanus, and everyone in Rome knows her name.",
+            lines:[
+              "You are the new scribe. You have a Cornelian name, I hear. So do I. We are both of us Scipio's people, in our way.",
+              "When my husband died, the King of Egypt, Ptolemy, asked to marry me. I could have worn a crown. I said no, and I raised my twelve children here instead. Three are still living.",
+              "Do you imagine I raised a son to be a king? Romans threw out their kings nearly four hundred years ago. My sons know that story better than anyone.",
+              "I used to tell them it shamed me that Rome still called me the mother-in-law of Scipio, and not yet the mother of the Gracchi. Perhaps I should have kept my mouth shut. I am afraid for them now. I will not pretend I am not."
+            ] } },
+
+        { id:'jewel_box', label:'An Empty Jewel Box', x:0.185, y:0.79, type:'object', kind:'trivial', required:false,
+          content:{ title:'An Empty Jewel Box',
+            text:"A small ivory box on the side table, lined in red, and empty. The household tells the story fondly. A wealthy lady once visited and showed off her jewels, and asked to see Cornelia's. Cornelia waited until her sons came home from their lessons and said, 'These are my jewels.'" } },
+
+        { id:'scribes', label:'The Scribes at Work', x:0.290, y:0.58, type:'object', kind:'clue', required:false,
+          content:{ title:'The Scribes at Work',
+            text:"Half a dozen scribes, slaves and freedmen like you, are bent over a long table copying claims. Each claim is a name, a tribe, a family, a story: 'Served at Carthage. Farm sold for debt.' 'Father killed in Spain.' 'Six children.' There are thousands of them in baskets on the floor.\n\nOne of the scribes hands you a stack without looking up. 'Copy these. Neatly. The commissioners can't read my writing.'" } },
+
+        { id:'forma', label:'The Survey Map', x:0.385, y:0.72, type:'document', kind:'clue', required:false,
+          content:{ title:'The Survey Map',
+            text:"A great map drawn on linen and weighted at the corners, the commission's survey of public land around Rome. The surveyors have gridded the land into squares, and inside each square, smaller lots are numbered.\n\nIn the margin: LOTS NOT TO BE SOLD. Under the law, a man who receives a lot may not sell it, so the rich cannot simply buy it all back again.\n\nIn the corner of the map, a block of land on the Via Tiburtina has been outlined in red ink. Next to it, a name: P. SCIPIO NASICA." } },
+
+        { id:'gaius', label:'The Younger Brother', x:0.455, y:0.55, type:'dialogue', kind:'clue', required:false,
+          grants:['knows_estate'],
+          content:{ title:'Gaius Gracchus',
+            people:['Gaius Gracchus'],
+            desc:"A young man of about twenty-one, with a surveyor's measuring cross over his shoulder and mud on his boots. He talks fast, with his hands.",
+            lines:[
+              "You are Arrius' scribe? Good, sit, there is a mountain to copy. I am Gaius, the brother. There are three of us on the commission: Tiberius, myself, and Appius Claudius, his father-in-law.",
+              "Do you know where this started? Years ago, when my brother was going out to Spain, he rode up through Etruria. He told me there were no free men in the fields. None. Mile after mile of land worked by foreign slaves in chains. That was when he made up his mind.",
+              "They say he wants a crown. He wants to measure land! You have seen what we do here. Lists and maps and measuring poles. Hardly the stuff of tyranny.",
+              "The Senate could have done this themselves ten years ago. Laelius proposed it, and backed away when the great men shouted. Somebody had to stop backing away.",
+              "If you doubt me, ride out the Via Tiburtina before tomorrow. Half a day. Look at the estate in red on that map, and then tell me who in this city wants to be king."
+            ] } },
+
+        { id:'blossius', label:'The Philosopher', x:0.590, y:0.55, type:'dialogue', kind:'clue', required:false,
+          content:{ title:'Blossius of Cumae',
+            people:['Blossius of Cumae'],
+            desc:"A bearded man in a Greek cloak with a scroll in one hand, an old friend and teacher of the tribune.",
+            lines:[
+              "I am Blossius, from Cumae. A Stoic, if you know what that means. We teach that all men share in reason, and so all men are, in a way, citizens of one city.",
+              "The Senate looks at the Roman People the way a shepherd looks at his flock. Something to be kept, and shorn, and sent out to die when there is a war. Tiberius looks at them and sees citizens.",
+              "Am I the one who put dangerous ideas in his head? I am flattered, but no. The idea that free men who fight for a country should own a piece of it is not Greek. It is the oldest Roman idea there is."
+            ] } },
+
+        { id:'stoic_scroll', label:'A Scroll of Philosophy', x:0.650, y:0.81, type:'document', kind:'herring', required:false,
+          debunk:"'Only the wise man is a king' is a famous Stoic paradox, taught in philosophy schools all over the Greek world. It means that a person who rules his own passions is freer and greater than any king on a throne. It was a teaching about how to live, not a plan to seize power. Blossius did teach Tiberius, but nothing in the sources suggests he taught him to want a crown.",
+          content:{ title:'A Scroll of Philosophy',
+            text:"A Greek scroll lies unrolled on a reading stand, held open by two little lead weights. You read Greek slowly, but one line jumps out at you:\n\nONLY THE WISE MAN IS A KING.\n\nYour patron would like this very much." } },
+
+        { id:'diophanes', label:'The Speechwriter', x:0.715, y:0.58, type:'dialogue', kind:'clue', required:false,
+          content:{ title:'Diophanes of Mytilene',
+            people:['Diophanes of Mytilene'],
+            desc:"A Greek rhetorician, exiled from his own city, scribbling on a wax tablet and crossing out more than he writes.",
+            lines:[
+              "Diophanes, of Mytilene. Teacher of speaking. I help the tribune find his words, and he throws most of them away and finds better ones.",
+              "Tomorrow is the vote for next year's tribunes. He must stand again. If he leaves office, Quintus Pompeius has promised to prosecute him the day his term ends. They will try him for deposing Octavius, and they will win.",
+              "So: stand again, which no tribune has done, and be called a tyrant. Or step down, and be destroyed. Which would you choose?"
+            ] } },
+
+        { id:'mural_crown', label:'A Golden Crown', x:0.800, y:0.31, type:'object', kind:'herring', required:false,
+          debunk:"The gold crown in the niche was not a king's crown. Romans awarded a gold 'mural crown,' its points meant as the towers of a city wall, to the first soldier over the wall of an enemy city, and Plutarch says that Tiberius, at sixteen, was among the first over the walls of Carthage in 146 BC. The sources do not say whether he received one; the crown in this game is an invention. Either way, it was a soldier's decoration, not a king's.",
+          content:{ title:'A Golden Crown',
+            text:"There, in a niche high on the wall, in the tribune's own house: a crown. Gold, heavy, with a ring of points standing up around the rim, just like a king's.\n\nYour heart jumps. Then a house slave passing with a tray sees where you are looking. 'That's no king's crown. It's a wall crown, for the first man over an enemy's wall. The master was first up the wall at Carthage,' he says proudly. 'He was sixteen.'" } },
+
+        { id:'pergamum_chest', label:'A Chest from Pergamum', x:0.885, y:0.75, type:'object', kind:'clue', required:false,
+          content:{ title:'A Chest from Pergamum',
+            text:"A cedar chest bound in bronze, carved with the royal star of Pergamum. This must be the chest Quintus Pompeius saw carried through the door.\n\nThe lid is not locked. Inside: rolled letters in Greek, sealed and unsealed, a list of the cities of the kingdom and their taxes, and a copy of the will of King Attalus, leaving his kingdom to the Roman People.\n\nNo diadem. No purple robe. Paper." } },
+
+        { id:'claudia', label:"The Tribune's Wife", x:0.955, y:0.58, type:'dialogue', kind:'clue', required:false,
+          content:{ title:'Claudia',
+            people:['Claudia'],
+            desc:"A young woman holding a little boy by the hand, watching the door to the street.",
+            lines:[
+              "I am Claudia. My father is Appius Claudius, the leader of the Senate. He sits on the commission with my husband. Did your patron tell you that?",
+              "The law was not written by one hot-headed young man. My father helped draft it. So did the consul himself, Mucius Scaevola, the finest lawyer in Rome. They are not wild men.",
+              "But you would not know it from the way the senators talk. My father dines out less and less these days. Nobody invites him."
+            ] } },
+
+        { id:'house_back', label:'Back to the Forum', x:0.985, y:0.86, type:'navigation', goto:'forum_day' },
+
+        { id:'sempronia', label:"The Tribune's Sister", x:0.520, y:0.62, type:'dialogue', kind:'clue', required:false,
+          content:{ title:'Sempronia',
+            people:['Sempronia'],
+            desc:"A woman sitting in the garden doorway, very still. She is the tribune's sister, married to the most famous general in Rome, Scipio Aemilianus, who is away in Spain besieging Numantia.",
+            lines:[
+              "I am Sempronia, his sister. Yes, another daughter named for the family. Every girl of the Sempronii is Sempronia.",
+              "My husband destroyed Carthage. Now he is starving Numantia into surrender. His letters ask after my mother and never mention my brother. That is how I know what he thinks.",
+              "My mother wanted sons who would be great. My husband wants a Rome that stays exactly as it is. I sit between them at dinner.",
+              "If this ends badly, my husband will say Tiberius brought it on himself. And I will go on living in his house."
+            ] } },
+
+        { id:'cornelia_letters', label:'A Shelf of Letters', x:0.210, y:0.38, type:'object', kind:'trivial', required:false,
+          content:{ title:"Cornelia's Letters",
+            text:"A shelf of scrolls in a neat, firm hand: copies of Cornelia's letters, to her sons, to friends, to scholars. Her Latin is so fine that teachers have their pupils copy it. A hundred years from now the orator Cicero will praise her letters, and a few lines of one still survive today.\n\nVery few words written by Roman women have come down to us at all. Hers are among them." } },
+
+        { id:'child_tablet', label:"A Child's Writing Tablet", x:0.775, y:0.85, type:'object', kind:'trivial', required:false,
+          content:{ title:"A Child's Writing Tablet",
+            text:"A small wax tablet dropped on the floor, covered in a child's wobbly letters: A B C D E F G H I K L M, and then, very proudly, ROMA.\n\nRomans write with a stylus, a pointed stick of bronze or bone, scratching letters into a thin layer of wax. Turn the stylus round and the flat end smooths the wax so you can start again. Rich children learn at home from a Greek slave tutor. Others go to a schoolmaster who teaches in a rented shop with a curtain across the front, and is quick with the cane." } }
+      ]
+    },
+
+    vigil_night: {
+      id: 'vigil_night',
+      name: 'Outside the House of Gracchus',
+      subtitle: 'The Night Before the Vote',
+      actLabel: 'Act III - The Vigil',
+      image: 'art/vigil_night.jpg',
+      hotspots: [
+        { id:'campfire_men', label:'Men by the Fire', x:0.120, y:0.76, type:'object', kind:'ambiance', required:false,
+          content:{ title:'Men by the Fire',
+            text:"Country men lie in their cloaks along the street, heads on their bundles, around a little fire of broken crates. Someone is passing a skin of sour wine. Nobody is singing. They are here to make sure that nothing happens to the house tonight, and they are taking it seriously." } },
+
+        { id:'arrius_vigil', label:'Arrius and the Tribes', x:0.280, y:0.60, type:'dialogue', kind:'clue', required:false,
+          content:{ title:'Quintus Arrius',
+            people:['Quintus Arrius'],
+            desc:"Arrius, wax tablets under his arm, walking the line of sleepers and counting heads.",
+            lines:[
+              "You came. Good. Count with me. Pollia, eleven. Quirina, sixteen. Not enough. The harvest is keeping them home, just like the senators planned.",
+              "At first light we go up the Capitol, to the open ground in front of the Temple of Jupiter. That is where the Assembly meets for the vote. We get there early and we hold the ground, so that when the tribes are called, our men are standing inside the ropes and not out in the street.",
+              "No weapons. He was very clear about that. If anybody starts something, it will not be us.",
+              "Sunrise. The Capitol. You will be there?"
+            ] } },
+
+        { id:'tiberius_door', label:'The Tribune at His Door', x:0.450, y:0.55, type:'dialogue', kind:'clue', required:false,
+          content:{ title:'Tiberius Gracchus',
+            people:['Tiberius Gracchus'],
+            desc:"Tiberius Gracchus stands in his own doorway in a dark, unwhitened toga, the clothes of mourning, holding a small boy by the hand. He looks out at the crowd in the street for a long time before he speaks.",
+            lines:[
+              "Friends. I have no guards but you. A tribune is sacred. Any man who lays a hand on him is cursed. But I do not think that will stop them now.",
+              "If I am killed tomorrow, I ask one thing. This is my son. Look after him, and his mother. I have nothing else to leave him that they cannot take.",
+              "Go to sleep, all of you. Tomorrow we vote. That is all we are going to do. We are going to vote."
+            ] } },
+
+        { id:'the_son', label:'The Boy', x:0.495, y:0.75, type:'object', kind:'ambiance', required:false,
+          content:{ title:'The Boy',
+            text:"The tribune's son, four or five years old, holding his father's hand and staring at the fires and the hundreds of strangers in the street. He is trying very hard to be brave. He does not quite understand what for." } },
+
+        { id:'helmet', label:'A Helmet by the Door', x:0.560, y:0.84, type:'object', kind:'ambiance', required:false,
+          content:{ title:'A Helmet by the Door',
+            text:"An old soldier's helmet stands on the doorstep. A slave tells you in a whisper that a snake got into it in the night, and laid her eggs inside, and the eggs hatched. In the morning the sacred chickens would not eat. A bad sign, everybody says. The slave makes a sign against the evil eye and hurries in." } },
+
+        { id:'villius', label:"The Tribune's Friend", x:0.625, y:0.62, type:'dialogue', kind:'clue', required:false,
+          content:{ title:'Gaius Villius',
+            people:['Gaius Villius'],
+            desc:"A stocky man keeping watch by the door, one of the tribune's oldest friends.",
+            lines:[
+              "Villius. I have known him since we were boys. He will not carry a sword tomorrow. I begged him to.",
+              "Tomorrow, on the Capitol, the crowd will be so loud nobody will hear a word anybody says. So we agreed on signs. If he is in danger, if they are coming for his life, he will put his hand to his head, like this. Then we close in around him.",
+              "That is all. A hand to the head. So we know."
+            ] } },
+
+        { id:'calvus', label:'A Loud Man', x:0.760, y:0.66, type:'dialogue', kind:'herring', noPoi:false, required:false,
+          debunk:"Titus Calvus was the only man in Rome you heard call for a crown. He was not one of Tiberius' men. He was your patron's, paid to stand in the crowd and shout the word 'king' where witnesses could hear it.",
+          content:{ title:'Titus Calvus',
+            people:['Titus Calvus'],
+            desc:"A big man with a loud voice and a fresh tunic, standing by the fire, slapping backs.",
+            lines:[
+              "Friend! Titus Calvus. Pour this man a cup! Tomorrow's the day, eh? Tomorrow we put Tiberius over all of them!",
+              "Tribune? Why stop at tribune? Put a crown on his head, I say! King Tiberius! Let the senators choke on that!",
+              "What? Why is everyone looking at me like that? Just talk, brothers. Just talk."
+            ] } },
+
+        { id:'naevia_vigil', label:'Naevia and Her Son', x:0.880, y:0.66, type:'dialogue', kind:'clue', required:false,
+          content:{ title:'Naevia',
+            people:['Naevia'],
+            desc:"The widow from the Subura sits on a doorstep across the street, her boy asleep with his head in her lap.",
+            lines:[
+              "He wanted to see the man who was going to give him a farm. I said we could not stay out all night. He said everybody else was.",
+              "I cannot vote. I am a woman, and his father is dead. But I can sit here. Somebody has to see what happens to him tomorrow.",
+              "Will you be up on the Capitol? Then look after them. Most of them have never been in a fight in the city. Only in wars."
+            ] } },
+
+        { id:'night_capitol', label:'The Capitol by Moonlight', x:0.930, y:0.18, type:'object', kind:'ambiance', required:false,
+          goto:'fides_night', gotoText:'Climb the Capitol Before Dawn',
+          gotoRequires:['arrius_vigil'],
+          gotoNote:"Your patron will want your report before the Assembly meets. There will be no coming back down tonight.",
+          gotoLocked:"Up there, at dawn, the Assembly will meet. You do not yet know what the tribune's people mean to do on the Capitol. Arrius is somewhere in the crowd, counting.",
+          content:{ title:'The Capitol by Moonlight',
+            text:"Above the rooftops, the Capitoline Hill, and on its summit the great Temple of Jupiter, best and greatest, pale in the moonlight. Beside it, on the slope, a smaller temple shows a light: the Temple of Fides, goddess of good faith. Somebody is awake up there too." } },
+
+        { id:'moon_stars', label:'The Moon', x:0.620, y:0.07, type:'object', kind:'trivial', required:false,
+          content:{ title:'The Moon',
+            text:"A waning moon over the Palatine. Some of the country men are reading the stars to guess the hour. They have been doing it all their lives, for planting and for harvest, and they are never more than a little wrong." } },
+
+        { id:'tertia_vigil', label:'Tertia', x:0.370, y:0.70, type:'dialogue', kind:'clue', required:false,
+          content:{ title:'Tertia',
+            people:['Tertia'],
+            desc:"The water girl from the Subura, out of breath, weaving between the sleepers.",
+            lines:[
+              "Arrius has had me running all night, courtyard to courtyard: which tribes are in, who's still on the road.",
+              "Pollia is short. I told him. He swore by Hercules. Then he gave me a copper anyway.",
+              "My mother thinks I'm asleep. I'll be back before she wakes up. Probably.",
+              "Tomorrow I'm going to climb the wall by the Capitol steps and watch the whole thing. Nobody looks at a girl on a wall."
+            ] } },
+
+        { id:'dark_street', label:'The Dark Street', x:0.195, y:0.28, type:'object', kind:'trivial', required:false,
+          content:{ title:'The Dark Street',
+            text:"Away from the fires, the street is black. Rome has no street lamps, and no police force at all. People who can afford it go out at night with slaves carrying torches. Everyone else stays home and bars the door.\n\nIf there is trouble, a Roman calls on his family, his friends, his clients and his neighbours. That is all the protection there is. Tonight the tribune's friends are his only guard. Tomorrow the senators will bring theirs." } }
+      ]
+    },
+
+    fides_night: {
+      id: 'fides_night',
+      name: 'The Temple of Fides',
+      subtitle: 'The Capitol, Before Dawn',
+      actLabel: 'Act III - Good Faith',
+      image: 'art/fides_night.jpg',
+      hotspots: [
+        { id:'fides_back', label:'Back Down to the Vigil', x:0.025, y:0.82, type:'navigation', goto:'vigil_night' },
+
+        { id:'scaevola', label:'The Consul', x:0.180, y:0.65, type:'dialogue', kind:'clue', noPoi:true, required:false,
+          content:{ title:'Publius Mucius Scaevola',
+            desc:"The consul, Rome's chief magistrate this year, sitting alone on a bench with a lamp, an old man in a fine toga. He is the most respected lawyer in the city.",
+            lines:[
+              "You are Nasica's freedman. He told me he had sent someone. He is waiting for your report, as if it will change anything.",
+              "I helped Tiberius draft that law. I thought it was just. I still do. I do not like what he did to Octavius, and I do not like him standing again.",
+              "Nasica asked me to use force against him. I told him what I will tell the Senate in the morning. I will not put a Roman citizen to death without a trial. If the People pass something unlawful, I will not enforce it. That is what the law allows me, and no more.",
+              "Your patron thinks that answer is weakness. Your patron is a priest. He should know better what an oath is worth."
+            ] } },
+
+        { id:'pompeius_tablet', label:'A Speech, Drafted', x:0.270, y:0.79, type:'document', kind:'clue', required:false,
+          content:{ title:'A Speech, Drafted',
+            text:"A wax tablet left on a bench, written in a fast, angry hand. A speech for the Senate.\n\n...I am his neighbour, Conscript Fathers, and I tell you that Eudemus of Pergamum brought him a royal diadem and a purple robe, as to one who would soon be king...\n\nIn the margin, a note in a different hand: Q.P.: Need a witness who will swear to it. N. will supply one.\n\nN. is your patron. The witness is meant to be you." } },
+
+        { id:'clubs', label:'A Pile of Staves', x:0.345, y:0.85, type:'object', kind:'clue', required:false,
+          content:{ title:'A Pile of Staves',
+            text:"Stacked in the shadow behind the columns: heavy wooden staves, cudgels, and the thick legs of benches, sawn short to make clubs. Dozens of them. Slaves in senatorial livery are carrying in more.\n\nNo swords. Swords are forbidden inside the sacred boundary of the city. Nobody said anything about clubs." } },
+
+        { id:'informer_note', label:'A Tablet, Sealed', x:0.525, y:0.72, type:'document', kind:'clue', required:false,
+          content:{ title:'A Tablet, Sealed',
+            text:"A small tablet with the seal broken, in a rough hand.\n\nT. Calvus to P. Nasica, greeting. Names of the men around the tribune: Q. Arrius the veteran, who lists the country men by tribe. C. Villius. Blossius the Greek. Diophanes the Greek. The widow Naevia who sits at his door. I will be in the crowd tomorrow and do as agreed.\n\nBeneath, in your patron's hand: Paid Calvus 200 denarii. Promise him a farm.\n\nYour patron already has the names. What he wants from you is a sworn witness." } },
+
+        { id:'fides_statue', label:'The Goddess', x:0.520, y:0.30, type:'object', kind:'ambiance', required:false,
+          content:{ title:'Fides',
+            text:"In the shadow of the temple stands the goddess Fides: Good Faith, Trust, the promise kept. Romans swear their treaties before her, and shake hands on their bargains in her name. Her right hand is held out, open.\n\nThe Senate will meet in her temple in the morning." } },
+
+        { id:'nasica_ledger', label:"Your Patron's Ledger", x:0.445, y:0.71, type:'document', kind:'clue', required:false,
+          content:{ title:"Your Patron's Ledger",
+            text:"A slim account book in Hermon's familiar hand, brought up from the house with your patron's things.\n\nLANDS HELD, VIA TIBVRTINA. Private land, bought: 410 iugera. Public land, held by occupation: 2,640 iugera. Rent paid to the Treasury on public land, last thirty years: nothing.\n\nUnder the law of Gracchus: may keep 500, with allowance for two sons.\n\nAt the bottom, underlined twice, a single word: NEVER." } },
+
+        { id:'satureius', label:'A Tribune with a Club', x:0.700, y:0.60, type:'dialogue', kind:'clue', required:false,
+          content:{ title:'Publius Satureius',
+            people:['Publius Satureius'],
+            desc:"A man in a tribune's toga, testing the weight of a bench leg in his hand.",
+            lines:[
+              "Satureius. Tribune of the plebs, same as him. Surprised? Not every tribune thinks he is the voice of the People.",
+              "A tribune is sacred, they say. Any man who lays hands on one is cursed. Well. Gracchus laid hands on Octavius, did he not? He broke the sacred thing first.",
+              "Tell your patron I will be at his side. Tell him I will strike the first blow if I have to."
+            ] } },
+
+        { id:'sacred_geese', label:'The Sacred Geese', x:0.815, y:0.88, type:'object', kind:'trivial', required:false,
+          content:{ title:'The Sacred Geese',
+            text:"Juno's sacred geese, penned on the Capitol and fed at public expense, because once, long ago, when the Gauls crept up this hill at night, the geese woke the guards with their honking. Rome has paid for their dinner ever since. They are honking now. Nobody is listening." } },
+
+        { id:'dawn', label:'First Light', x:0.930, y:0.36, type:'object', kind:'ambiance', required:false,
+          content:{ title:'First Light',
+            text:"Grey light behind the hills to the east. Down on the open ground before the Temple of Jupiter, the first of the crowd is arriving: Arrius' country men, tribe by tribe, carrying nothing but their cloaks. In an hour the Assembly will be called. In an hour the Senate will meet in here.\n\nYour report is due." } },
+
+        { id:'priest_things', label:"The Chief Priest's Things", x:0.585, y:0.74, type:'object', kind:'trivial', required:false,
+          content:{ title:"The Chief Priest's Things",
+            text:"Laid out at the end of the table: a long-handled bronze ladle for pouring wine at a sacrifice, a sacrificial knife with an ivory handle, and a folded toga.\n\nYour patron is Pontifex Maximus, the head of Rome's priests. Roman priests are not a separate class of holy men. They are senators and politicians who also perform the state's sacrifices, read the omens, and keep the calendar. When a Roman sacrifices, he pulls a fold of his toga up over his head." } },
+
+        { id:'fannia', label:'A Woman at the Door', x:0.855, y:0.62, type:'dialogue', kind:'ambiance', noPoi:true, required:false,
+          content:{ title:'Fannia',
+            desc:"A woman in a dark stola and veil, holding a little honey cake and a pinch of incense, waiting for the temple doors to open.",
+            lines:[
+              "I come at dawn to pray for my son. He votes today, for the first time. His father made him promise to vote as our patron tells him. He made me no promises at all.",
+              "You think women don't matter in this? Sixty years ago, our grandmothers filled every street to the Forum, day after day, and stood outside the senators' doors until they repealed the law that forbade women to wear gold or ride in carriages. Old Cato made a speech against us. We won anyway.",
+              "We cannot vote. But no man in Rome gets to the Assembly without walking out of some woman's door in the morning."
+            ] } }
+      ]
+    }
+
+  },
+
+  // The report tab opens once the player has met the patron, and can be filed once every id
+  // in requires has been discovered.
+  // Each id is a hotspot to discover or a scene to enter.
+  report: {
+    unlock:   'nasica',
+    requires: ['arrius_vigil', 'fides_night'],
+    filedCaption:   'Delivered to P. Scipio Nasica on the Capitol, the morning of the vote.',
+    lockedCaption:  'This report cannot be filed until your inquiry is complete. Your patron expects it on the Capitol, before the vote.',
+    fieldsCaption:  'Your inquiry is complete. Answer all five questions before you file.',
+    readyCaption:   'Your inquiry is complete. The report goes to your patron at first light.'
+  },
+
+  ending: {
+    caseLabel: 'Inquiry into Ti. Gracchus',
+    patron:    'Scipio Nasica',
+    scene:     'fides_night',
+    act:       'Act IV - The Report',
+    place:     'The Temple of Fides',
+    time:      'First Light',
+    carryText: 'Carry It to Your Patron',
+
+    confirm: {
+      title: 'The Report Is Finished',
+      text: "Five answers, in your own hand. At first light you will put the tablets into your patron's hands, and after that they will not be yours anymore.\n\nIs there anything left you need to see?"
+    },
+
+    verdict: {
+      intro: "Your patron reads your tablets standing by a lamp, every word, slowly. Outside the temple doors the sky is going grey, and you can hear the crowd gathering on the hill.\n\nWhen he is done he closes the tablets and turns to you.\n\n'One question first, and answer me plainly, as a client to his patron. The Senate will ask me, and I will tell them what my witness says.' He lays his hand on your shoulder. 'Does Tiberius Gracchus mean to make himself king?'",
+      options: [
+        { id:'yes',    label:'"Yes. He means to be king."', note:'Swear to it, as he asks.' },
+        { id:'no',     label:'"No. He means to give land to the poor."', note:'Tell him what you saw.' },
+        { id:'accuse', label:'"The danger to the Republic is in this temple."', note:'Tell him what you found here.', requiresAny:['clubs', 'nasica_ledger', 'informer_note'] }
+      ]
+    },
+
+    names: {
+      intro: "'Good,' he says. 'Now the names. The Senate will want to know who stands with him, so that the consuls know whom to question, when this is over.'",
+      introNo: "His hand drops from your shoulder. 'You disappoint me,' he says. 'No matter. A witness is useful, but not necessary.' He holds out his hand. 'The names, at least. You owe me that much.'",
+      note: "Your patron will act on every name you give him. Anyone you marked as a Person of Interest in your notebook is named already. Change anything you like.",
+      listLabel: 'The Tribe Lists (212 names)',
+      listNote: 'Copied from the courtyard in the Subura',
+      listId: 'tribe_lists',
+      listGivenText: 'the tribe lists of two hundred and twelve country voters'
+    },
+
+    reaction: {
+      accuse: "You tell him what you have seen behind the columns of this temple, and what you have read on his table.\n\nFor a moment your patron says nothing at all. Then he takes his hand from your shoulder and wipes it on his toga.\n\n'I freed you,' he says quietly. 'I gave you my name. And you stand in the temple of Good Faith and lecture me about the Republic.' He turns to the slaves at the door. 'Put him out.'\n\nThey put you out, onto the steps, into the grey light, among the crowd.",
+      names: "Your patron reads down the names and nods. 'Good. You have done the Republic a service.' He gives the tablets to a slave to be copied for the consuls. He is already turning away as the senators begin to arrive.",
+      namesNo: "He takes the names without a word and hands them to a slave to be copied for the consuls. He does not look at you again.",
+      none: "You give him no names. He looks at you for a long moment. 'I see,' he says. 'Then go. I will remember this.' He does not offer his hand.",
+      calvusNames: "The names you give him are the same names Titus Calvus sold him for two hundred denarii. What your patron needed from you was never the names. It was a sworn witness to set beside them.",
+      calvusNone: "He has Calvus' names already. But a hired shouter is not a witness, and he knows it."
+    },
+    calvusList: ['Quintus Arrius', 'Gaius Villius', 'Blossius of Cumae', 'Diophanes of Mytilene', 'Naevia'],
+
+    // What the player hears of the morning on the Capitol, by verdict.
+    capitol: {
+      yes: "The Senate met in the Temple of Fides with the doors open. Out on the hill, the Assembly was already in uproar, so loud that the tribune could not make himself heard. A senator named Fulvius Flaccus pushed through the crowd to warn him: the senators meant to kill him. Tiberius, unable to be heard, put his hand to his head.\n\nThose who had agreed on that sign knew what it meant. His enemies ran to the Senate and said he was asking for a crown.\n\nYour patron rose. 'He is asking for a diadem. I have a sworn witness, a man who has been among them.' He turned to the consul and demanded that he act. Scaevola refused. He would not put a citizen to death without a trial.\n\n'Then the consul has betrayed the city,' said your patron. 'Let those who would save the Republic follow me.' He drew the fold of his toga over his head, as a priest does at a sacrifice, and walked out of the temple. The senators followed him, and their slaves followed them, carrying the clubs.",
+      no: "The Senate met in the Temple of Fides with the doors open. Out on the hill, the Assembly was already in uproar, so loud that the tribune could not make himself heard. A senator named Fulvius Flaccus pushed through the crowd to warn him: the senators meant to kill him. Tiberius, unable to be heard, put his hand to his head.\n\nYou know what it meant. Villius told you. His enemies ran to the Senate and said he was asking for a crown.\n\nYour patron did not need your oath after all. Titus Calvus had been shouting 'king' in the crowd all morning, and that was witness enough. Your patron demanded that the consul act. Scaevola refused. 'Then the consul has betrayed the city,' said your patron. 'Let those who would save the Republic follow me.' He drew the fold of his toga over his head, as a priest does at a sacrifice, and walked out. The senators followed him, and their slaves followed them, carrying the clubs.",
+      accuse: "You were standing on the steps when it happened, close enough to see everything.\n\nThe Assembly was in uproar, so loud the tribune could not make himself heard. Tiberius put his hand to his head. You knew what it meant. So did Villius, beside him, and so did Arrius. But somebody ran into the temple shouting that he was asking for a crown.\n\nA moment later your patron came out of the doors with the fold of his toga drawn over his head, like a priest going to a sacrifice, and the senators came behind him, and their slaves came behind them with the clubs. You shouted. Nobody heard you either."
+    },
+    death: "The crowd gave way before the senators. Nobody dared strike a man in a senator's toga. The senators' men picked up the broken legs of benches and went in among the people.\n\nTiberius Gracchus was struck down near the doors of the Temple of Jupiter. The first blow was struck by Publius Satureius, a tribune like himself. More than three hundred people were killed that morning, with clubs and stones. Not one of them by a sword.\n\nThat night the bodies were thrown into the Tiber. His brother Gaius asked to bury him, and was refused.",
+
+    // Fates of anyone named, from the special court the consuls of the next year set up to try
+    // the tribune's followers. breaks:true marks the people who held the movement together.
+    fates: {
+      'Tiberius Gracchus':      { text:"You gave them the one name they already had. It made no difference to him. It made a difference to you: in the record, yours is one of the names that called him a danger to the Republic." },
+      'Quintus Arrius':         { breaks:true, text:"Quintus Arrius was brought before the consuls' court the next spring. He told them he had kept lists of voters, which was true and was not a crime. He was condemned anyway and forbidden fire and water: exile, on pain of death. He went to live among the Marsians, who took him in. He never saw a farm of his own." },
+      'Naevia':                 { text:"Naevia could not be tried. She was a woman, and had done nothing. But her son's claim was struck off the commission's rolls, and the rent collector raised her rent until she left the courtyard. Nobody in the Subura knew where she went." },
+      'Gaius Villius':          { breaks:true, text:"Gaius Villius was condemned by the consuls' court. The story told afterwards was that they shut him in a cask with vipers. It may not be true. That people believed it says enough about that year." },
+      'Blossius of Cumae':      { text:"Blossius was brought before the consuls. Asked whether he would have done anything Tiberius told him, he said yes. 'What if he had told you to burn the Capitol?' your patron asked. 'He would never have told me that,' said Blossius. They let him go. He sailed for Asia and joined a pretender fighting Rome for the throne of Pergamum, and when that war was lost he killed himself." },
+      'Diophanes of Mytilene':  { text:"Diophanes the rhetorician was put to death. He had written speeches." },
+      'Gaius Gracchus':         { text:"Nobody dared touch Gaius. He was twenty-one, and Cornelia's son, and the people's darling. But they wrote his name down, and they kept it." },
+      'Cornelia':               { text:"Your patron read her name and set it aside. 'The daughter of Africanus,' he said. 'Nobody will lay a hand on her.' Nobody did. She outlived both her sons." },
+      'Claudia':                { text:"Claudia was the daughter of the leader of the Senate. Her name was never even read aloud." },
+      'Sextus Lollius':         { breaks:true, text:"Sextus Lollius was arrested before he got home to Reate, tried, and exiled. His wife brought in the harvest alone." },
+      'Philo the Money-Changer':{ text:"Philo was questioned for an afternoon and sent back to his scales. He had only been talking about the price of bread." },
+      'Gnaeus the Rent Collector': { text:"Gnaeus was questioned and released. He raised the rents again that winter." },
+      'Old Tullus':             { text:"The overseer had a name now. In the autumn, a fire started in Old Tullus' barn, and the estate bought his seven iugera at a fair price from a frightened old man." },
+      'Damon the Overseer':     { text:"Damon belonged to your patron. Your patron had him whipped for talking to a stranger about the master's business, and sold him to an estate in the south." },
+      'Syrus':                  { text:"Syrus belonged to your patron. On the strength of your report he was sold to a dealer bound for Sicily, where the slave war had just been put down and the estates needed hands." },
+      'Herius the Marsian':     { text:"Herius the Marsian had opposed the law. The consuls' court did not care. He was not a Roman citizen, so they could not try him, and he went back to his mountains with a story about how Rome treats its allies. Forty years later, the Marsians would lead the allies in a war against Rome to win the right to vote." },
+      'Titus Calvus':           { text:"You named Titus Calvus. Your patron only smiled. Calvus had been his man all along. He got his farm: thirty iugera of public land, on the Via Tiburtina." },
+      'Hermon the Steward':     { text:"Your patron read Hermon's name twice. The old steward who had been kind to you when you were small, who had told you where to look, was sold to a dealer before the month was out. He never knew who had named him." },
+      'Tertia':                 { text:"Tertia was eleven, and the consuls' court did not try children. But Arrius' messenger had a name now. The rent collector put her family out of the courtyard, and in the next tenement nobody would let her carry messages for anyone again." },
+      'Philumena':              { text:"Philumena belonged to your patron. Within the month she was sold away from the estate, away from Damon, and away from her children." },
+      'Sempronia':              { text:"Your patron set his cousin's name aside. When her husband, Scipio Aemilianus, heard in Spain of her brother's death, he quoted a line of Homer: 'So perish anyone else who does such deeds.' She went on living in his house." },
+      'Publius Satureius':      { text:"You named Publius Satureius. Your patron laughed out loud. Satureius struck the first blow, and was proud of it all his life." }
+    },
+    fateDefault: '{name} was questioned by the consuls’ court within the year.',
+    listFate: "With the tribe lists in hand, the consuls did not have to guess. Men were hunted down in their villages from Reate to Tusculum. Some were exiled, some were killed, and the rest learned to stay home from the Assembly. The country tribes never came into the city in such numbers again.",
+
+    outcome: {
+      broken: "In the months that followed, the Senate did not abolish the land law. It did not dare. A new commissioner was elected in Tiberius' place, and the surveyors went on measuring.\n\nBut the men who had walked into Rome to vote for that law were in exile, or in hiding, or dead. In the country, people learned the lesson your report helped teach: that the Assembly was dangerous, and the land commission was something you did not put your name to.",
+      strike: "In the months that followed, the Senate did not abolish the land law. It did not dare. A new commissioner was elected in Tiberius' place, and the surveyors went on measuring. Boundary stones began to go up along the roads, carved with the names of the commissioners. Some of them are still standing today.\n\nThe census of 125 BC counted 394,736 citizens, about seventy-five thousand more than six years before. Historians still argue about why. Many think a good share of those new names were men who had been given land.",
+      codas: [
+        { person:'Quintus Arrius', when:'strike', text:"Quintus Arrius received thirty iugera of land in the Sabine hills, two valleys over from the farm he had lost. The boundary stone at its corner carried the name of C. Sempronius Gracchus. He carved his own name under it, which was against the law, and nobody ever made him take it off." },
+        { person:'Naevia', when:'strike', text:"Naevia's son received his lot when he came of age: a farm he could never be made to sell. He was enrolled in the census, and in time called up for the legions." },
+        { person:'Tertia', when:'strike', text:"Tertia climbed the wall by the Capitol steps that morning and saw everything. She never forgot it. Years later she told her own daughters, and they told theirs." },
+        { person:'Tertia', when:'broken', text:"Tertia climbed the wall by the Capitol steps that morning and saw everything. She never forgot it, and she never told anyone who had given the consuls their names." },
+        { person:'Old Tullus', when:'strike', text:"When the surveyors came to the Via Tiburtina, they cut the great estate down to its lawful size. Old Tullus lived to see new farmhouses go up on either side of his seven iugera, and children in the fields who were not wearing chains." }
+      ]
+    },
+
+    epilogue: {
+      act:   'Epilogue',
+      title: 'The Forum Romanum',
+      sub:   'Ten Years Later, 123 BC',
+      scene: 'forum_day',
+      heading: 'Ten Years Later',
+      yes: {
+        before: "Your patron kept his word. You received a farm on the Via Tiburtina: thirty iugera of public land, cut from the estate before the commissioners could take it.\n\nHe did not live to see you work it. Rome hated him so openly after that morning on the Capitol that the Senate sent him away on an embassy to Asia, to keep him out of the city. He died there within the year, at Pergamum, the kingdom whose will started it all.",
+        stamp: 'Fides Servata: Faith Kept',
+        after: "You kept faith with your patron. You have had ten years to decide what that was worth."
+      },
+      no: {
+        before: "Your patron never spoke to you again. A patron who drops a client takes everything with him: work, protection, friends. You found work copying contracts at the harbour in Ostia.\n\nRome hated him so openly after that morning on the Capitol that the Senate sent him away on an embassy to Asia, to keep him out of the city. He died there within the year, at Pergamum, the kingdom whose will started it all.",
+        stamp: 'Cliens Dimissus: Client Dismissed',
+        after: "You told the truth, and it changed nothing that day. It changed you."
+      },
+      accuse: {
+        before: "Your patron called you ungrateful in front of the whole Senate, which is the worst thing a Roman can say of a freedman. You left Rome and found work copying contracts at the harbour in Ostia.\n\nRome hated him so openly after that morning on the Capitol that the Senate sent him away on an embassy to Asia, to keep him out of the city. He died there within the year, at Pergamum, the kingdom whose will started it all.",
+        stamp: 'Ingratus: Ungrateful',
+        after: "You were the only one in the Temple of Good Faith who said it out loud."
+      },
+      gaius: "Now it is 123 BC, and you are standing in the Forum again, and a tribune is speaking from the Rostra. He walks the platform. He talks with his hands. It is Gaius Gracchus.\n\nHe has a grain law, so the poor of the city can buy bread at a fair price. He has colonies, and roads, and new courts, and next year he will propose Roman citizenship for the Latin allies. He is more dangerous to the Senate than his brother ever was, and everyone knows it, Gaius most of all.\n\nTwo years later the Senate will pass an emergency decree for the first time in its history, telling the consul to defend the Republic by any means. His followers will make a stand on the Aventine Hill. Gaius will flee across the Tiber and die in the sacred grove of the goddess Furrina, with one loyal slave beside him, and some three thousand of his followers will be killed or executed. The consul will build a Temple of Concord in the Forum to celebrate, and someone will scrawl beneath its dedication, in charcoal, in the night: A WORK OF MAD DISCORD BUILDS A TEMPLE OF CONCORD.",
+      calvus: "You think of the tablet from Titus Calvus that you found in the temple: names bought for two hundred denarii, a witness wanted to stand beside them. That is how it was done.",
+      close: "On the Capitol, in 133 BC, Romans killed Romans over politics for the first time in four hundred years. It would not be the last time. A century later the Republic was gone, and Rome had an emperor in everything but name."
+    },
+
+    history: {
+      intro: "Regnum is historical fiction. You, Hermon, Phoebe, Arrius, Naevia, Tertia, Old Tullus, Philumena, Syrus, Fannia, Calvus and the other ordinary people are invented. Tiberius and Gaius Gracchus, Cornelia, Sempronia, Claudia and her sister the Vestal Claudia, Scipio Nasica, Quintus Pompeius, Marcus Octavius, Blossius, Diophanes, Gaius Villius, Mucius Scaevola and Publius Satureius were real, and nearly everything the game says they did comes from the ancient sources.",
+      items: [
+        { title:'Public Land', text:"As Rome conquered Italy it took land from the defeated and made it ager publicus, public land belonging to the Roman People. Much of it was rented out or simply occupied, and over generations the rich gathered huge holdings, often worked by slaves. An old law limited any one person to 500 iugera (about 310 acres), but nobody enforced it." },
+        { title:'The Law of Tiberius Gracchus', text:"In 133 BC Tiberius, as tribune of the plebs, passed a law to enforce that limit, with an allowance for sons, and to give the surplus to poor citizens in small lots that could not be sold. A commission of three men, Tiberius, his brother Gaius, and his father-in-law Appius Claudius, was set up to do it. Boundary stones carved with the commissioners' names have been found in southern Italy." },
+        { title:'Soldiers Without Farms', text:"Only citizens with property could serve in the legions. Long wars in Spain kept small farmers away from home for years, and many lost their land to debt or to wealthy neighbours. The census numbers that Livy's summaries record fell from 328,442 in 142 BC to 317,933 in 136 BC, then rose to 394,736 by 125 BC, after the land commission had been at work." },
+        { title:'Slaves on the Land', text:"Rome's wars brought hundreds of thousands of captives into Italy as slaves. From 135 to 132 BC, slaves on the great estates of Sicily rose in revolt under a Syrian named Eunus, who took the name King Antiochus. The Gracchan law did nothing for slaves. It was meant to rebuild the class of free citizen farmers who filled the legions." },
+        { title:'Octavius and the Second Tribunate', text:"When the tribune Marcus Octavius vetoed the land law, Tiberius had the Assembly vote him out of office, something that had never been done. He then stood for a second year as tribune, which was also unprecedented. Even many Romans who supported land reform thought he had gone too far, and his enemies used both acts to argue that he was making himself a tyrant." },
+        { title:'Pergamum', text:"In 133 BC King Attalus III of Pergamum, in what is now Turkey, died and left his kingdom to Rome. Tiberius proposed using the royal treasure to equip the new farmers, and letting the People rather than the Senate decide what to do with the kingdom. Plutarch reports that the senator Quintus Pompeius claimed the envoy from Pergamum had given Tiberius a diadem and a purple robe." },
+        { title:'The Hand to the Head', text:"According to Plutarch, on the day of the vote Tiberius could not make himself heard over the crowd, so he touched his head to show that his life was in danger. His enemies told the Senate he was asking for a crown. The agreed signal you hear about from Villius is the game's invention, but the gesture and its two readings come from Plutarch." },
+        { title:'The Killing on the Capitol', text:"When the consul Mucius Scaevola refused to use force, Scipio Nasica, the Pontifex Maximus, led senators and their attendants up the Capitol. Tiberius and about three hundred supporters were beaten to death with clubs and broken benches, and their bodies thrown into the Tiber. The next year a special court tried his followers; Diophanes was executed, and Plutarch tells the story of Gaius Villius and the vipers. Nasica was sent to Asia and died at Pergamum." },
+        { title:'Gaius Gracchus', text:"Ten years later Gaius Gracchus became tribune and went further than his brother: subsidised grain for the city poor, new colonies, new courts, and a proposal to extend citizenship to Rome's Latin allies. In 121 BC the Senate passed its first 'final decree' and the consul Lucius Opimius attacked Gaius and his followers on the Aventine. Gaius died, and about three thousand others were killed or executed." },
+        { title:'Roman Women', text:"Roman women could not vote or hold office, and most married in their early teens. But they were not silent. In 195 BC women crowded the Forum for days until the Senate repealed the Oppian law that limited their gold and carriages. A Vestal Virgin named Claudia really did ride in her father's triumphal chariot in 143 BC so that no tribune could pull him down. Cornelia, the mother of the Gracchi, was admired for centuries for her learning and her letters, and Plutarch says her ambitions pushed her sons forward. Women like Naevia, Tertia and Philumena left almost no trace in the sources, which is exactly why the game imagines them." },
+        { title:'Whose Story?', text:"Almost everything we know about the Gracchi was written long after they died, mostly by Plutarch and Appian, both Greeks writing under the emperors more than two hundred years later. They drew on earlier writers who were partisans on one side or the other. Historians still argue about whether the brothers were idealists, ambitious nobles, or both. The question you were sent to answer, whether Tiberius meant to make himself king, was argued in Rome for generations." }
+      ]
+    },
+
+    review: [
+      { title:'The Land Swallowed Up', text:"Public land, belonging to all Romans, held for generations by a few great families and worked by slaves.",
+        ids:['old_tomb','boundary_stone','ruined_farm','damon','villa','old_tullus','forma','graffiti'] },
+      { title:'Soldiers Without Farms', text:"Men who fought Rome's wars for years and came home to find their farms gone.",
+        ids:['tiberius','rustics','arrius','naevia','census_tablet','gnaeus'] },
+      { title:'Slaves on Italian Soil', text:"Captives from Rome's wars, working the land in chains, and the revolt in Sicily that frightened every estate owner in Italy.",
+        ids:['chain_gang','ergastulum','syrus','vilica','grain_jar'] },
+      { title:'Not Everyone Gained', text:"The allies who farmed public land but could not vote, and the money from Pergamum that both sides wanted.",
+        ids:['herius','philo','temple_saturn'] },
+      { title:'Real Reasons to Worry', text:"A tribune deposed, the Senate bypassed, a second term sought. The tribune's opponents had real arguments, too.",
+        ids:['curia','octavius_bench','octavius','diophanes','sempronia','scaevola'] },
+      { title:'The Movement', text:"Who stood with the tribune, what they wanted, and where and when they meant to vote.",
+        ids:['scribes','gaius','cornelia','blossius','claudia','tribe_lists','tertia','arrius_vigil','tertia_vigil','tiberius_door','villius','naevia_vigil'] },
+      { title:'How a Crown Is Made', text:"A diadem nobody found, a chest full of paper, and a gesture that meant two different things.",
+        ids:['pergamum_chest','imagines','pompeius_tablet'] },
+      { title:'What Your Patron Was Hiding', text:"The land he stood to lose, the informer he paid, the witness he needed, and the clubs.",
+        ids:['commission','nasica','steward','clubs','informer_note','nasica_ledger','satureius'] }
+    ]
+  }
+};
+
+const gameState = {
+  currentScene: GAME_DATA.sceneOrder[0],
+  discovered:   new Set(),   // hotspot ids clicked
+  visited:      new Set(),   // scene ids entered
+  evidence:     [],          // {id, title, type, sceneName}
+  people:       {},          // keyed by generated string ID, value: {id, hotspotId, name, sceneName, poi, notes}
+  report:       { who:'', what:'', where:'', when:'', why:'' },
+  reportFiled:  false,
+  cardOpen:     false,
+  notebookOpen: false,
+  notebookTab:  'notes',
+  reportMilestone: 0          // 1 once the report tab opens up, 2 once the report can be filed
+};
+
+// =============================================================
+// PANNING
+// =============================================================
+const pan = {
+  x: 0, minX: 0, maxX: 0,
+  dragging: false,
+  startMX: 0, startPX: 0,
+  moved: false,
+  imgW: 0
+};
+
+// A press may drift this many pixels and still count as a click rather than a drag.
+const DRAG_THRESHOLD = 10;
+
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+function isDesktopDocked() { return window.innerWidth >= 1000; }
+function getGameWidth()    { return window.innerWidth - (isDesktopDocked() ? 380 : 0); }
+
+function applyDockedLayout() {
+  const docked = isDesktopDocked();
+  const vp = document.getElementById('game-viewport');
+  const nb = document.getElementById('notebook');
+  const toggle = document.getElementById('nb-toggle');
+  const nbClose = document.getElementById('nb-close');
+  if (docked) {
+    vp.style.right = '380px';
+    nb.style.right = '0';
+    nb.style.width = '380px';
+    nb.classList.add('open');
+    toggle.style.display = 'none';
+    nbClose.style.display = 'none';
+  } else {
+    vp.style.right = '0';
+    nb.style.width = '';
+    nb.style.right = '';
+    nb.classList.toggle('open', gameState.notebookOpen);
+    toggle.style.display = '';
+    nbClose.style.display = '';
+  }
+}
+
+function setPan(x, animate) {
+  x = clamp(x, pan.minX, pan.maxX);
+  pan.x = x;
+  const c = document.getElementById('panorama-container');
+  c.style.transition = animate ? 'transform 0.28s ease-out' : 'none';
+  c.style.transform  = `translateX(${x}px)`;
+  updateScrollThumb();
+  updateChevrons();
+}
+
+function panBy(dx, animate) { setPan(pan.x + dx, animate); }
+
+function computeBounds() {
+  const vw = getGameWidth();
+  const img = document.getElementById('scene-image');
+  let iw;
+  if (img.naturalWidth) {
+    iw = img.naturalWidth * (window.innerHeight / img.naturalHeight);
+  } else {
+    iw = vw * 3.18; // fallback ratio
+  }
+  pan.imgW = iw;
+  pan.minX = Math.min(0, vw - iw);
+  pan.maxX = 0;
+  document.getElementById('panorama-container').style.width = iw + 'px';
+  // Start near the left edge, where each scene's first conversation is
+  const startX = pan.minX * 0.08;
+  setPan(startX, false);
+}
+
+function updateScrollThumb() {
+  const track = document.getElementById('scroll-track');
+  const thumb = document.getElementById('scroll-thumb');
+  const range = pan.minX - pan.maxX; // negative number, range magnitude
+  if (!range) { thumb.style.width = '100%'; thumb.style.left = '0'; return; }
+  const ratio  = pan.imgW / getGameWidth();
+  const pct    = Math.max(8, 100 / ratio);
+  const prog   = pan.maxX === pan.minX ? 0 : (pan.x - pan.maxX) / (pan.minX - pan.maxX);
+  const tw     = track.offsetWidth;
+  thumb.style.width = pct + '%';
+  thumb.style.left  = (prog * (tw - tw * pct / 100)) + 'px';
+}
+
+function updateChevrons() {
+  document.getElementById('chev-left').classList.toggle('edge',  pan.x >= pan.maxX - 2);
+  document.getElementById('chev-right').classList.toggle('edge', pan.x <= pan.minX + 2);
+}
+
+// =============================================================
+// SCENE INIT
+// =============================================================
+function loadScene(id) {
+  const scene = GAME_DATA.scenes[id];
+  if (!scene) return;
+  gameState.currentScene = id;
+  gameState.visited.add(id);
+
+  document.getElementById('loc-name').textContent = scene.name;
+  document.getElementById('loc-sub').textContent  = scene.subtitle;
+  document.getElementById('loc-act').textContent  = scene.actLabel;
+  document.getElementById('nb-loc').textContent   = scene.name + ' · ' + scene.actLabel;
+
+  // Clear the previous scene's handlers first: a cached image still fires a
+  // late load event, which would otherwise rebuild the old scene's hotspots.
+  const img = document.getElementById('scene-image');
+  img.onload = img.onerror = null;
+  img.src = scene.image;
+  const build = () => {
+    if (gameState.currentScene !== id) return;
+    computeBounds();
+    buildHotspots(scene);
+  };
+  if (img.complete && img.naturalWidth) {
+    build();
+  } else {
+    img.onload = build;
+    img.onerror = build;
+  }
+
+  checkReportTab();
+  checkReportReady();
+
+  const btn  = document.getElementById('progress-btn');
+  const prog = scene.progression || {};
+  btn.textContent = prog.buttonText || '';
+  btn.classList.remove('show');
+  checkProgression();
+}
+
+// =============================================================
+// HOTSPOTS
+// =============================================================
+// A hotspot with requires:[ids] stays hidden until every id has been discovered.
+// Optional background cards: trivia, and ambient objects that open no doorway.
+// They get a pale blue light and a 'Roman Life' tag so slower readers can skip them.
+// Conversations are never marked optional.
+function isExtra(h) {
+  if (h.type === 'navigation' || h.type === 'dialogue' || h.goto || h.transition) return false;
+  return h.kind === 'trivial' || h.kind === 'ambiance';
+}
+
+function hotspotAvailable(h) {
+  return !h.requires || h.requires.every(id => gameState.discovered.has(id));
+}
+
+function refreshHotspots() {
+  const scene = GAME_DATA.scenes[gameState.currentScene];
+  if (!scene) return;
+  scene.hotspots.forEach(h => {
+    const el = document.querySelector(`.hotspot[data-id="${h.id}"]`);
+    if (!el) return;
+    const show = hotspotAvailable(h);
+    if (show && el.style.display === 'none') {
+      el.style.display = '';
+      el.classList.add('reveal');
+    } else if (!show) {
+      el.style.display = 'none';
+    }
+  });
+}
+
+function buildHotspots(scene) {
+  const layer = document.getElementById('hotspot-layer');
+  layer.innerHTML = '';
+  scene.hotspots.forEach(h => {
+    if (h.dev && !DEV_TOOLS) return;
+    const isNav = h.type === 'navigation';
+    const el = document.createElement('div');
+    el.className = isNav
+      ? 'hotspot nav-hotspot'
+      : 'hotspot' + (isExtra(h) ? ' extra' : '') + (gameState.discovered.has(h.id) ? ' found' : '');
+    if (!hotspotAvailable(h)) el.style.display = 'none';
+    el.dataset.id = h.id;
+    el.style.left  = (h.x * 100) + '%';
+    el.style.top   = (h.y * 100) + '%';
+    el.setAttribute('role', 'button');
+    el.setAttribute('tabindex', '0');
+    el.setAttribute('aria-label', h.label);
+
+    const glow = document.createElement('div');
+    glow.className = 'hotspot-glow';
+    el.appendChild(glow);
+
+    if (isNav) {
+      // Always-visible direction label
+      const lbl = document.createElement('div');
+      lbl.className = 'hotspot-nav-label';
+      lbl.textContent = h.label;
+      el.appendChild(lbl);
+      el.addEventListener('click',   e => { e.stopPropagation(); if (!pan.moved) goToScene(h.goto, h.label); });
+      el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToScene(h.goto, h.label); } });
+    } else {
+      el.title = h.label;
+      el.addEventListener('click',   e => { e.stopPropagation(); if (!pan.moved) openCard(h.id); });
+      el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openCard(h.id); } });
+    }
+
+    layer.appendChild(el);
+  });
+}
+
+// =============================================================
+// EVIDENCE CARD
+// =============================================================
+// Looks in the current scene first, then anywhere else, so notebook entries
+// from earlier scenes can still be reopened.
+function findHotspot(id) {
+  const here  = GAME_DATA.scenes[gameState.currentScene];
+  const local = here.hotspots.find(x => x.id === id);
+  if (local) return { h: local, scene: here, local: true };
+  for (const sid of Object.keys(GAME_DATA.scenes)) {
+    const s = GAME_DATA.scenes[sid];
+    const h = s.hotspots.find(x => x.id === id && x.type !== 'navigation');
+    if (h) return { h, scene: s, local: false };
+  }
+  return null;
+}
+
+function markDiscovered(h) {
+  gameState.discovered.add(h.id);
+  (h.grants || []).forEach(flag => gameState.discovered.add(flag));
+}
+
+function openCard(id) {
+  const found = findHotspot(id);
+  if (!found) return;
+  const { h, scene, local } = found;
+
+  const isNew = local && !gameState.discovered.has(id);
+  if (isNew) {
+    markDiscovered(h);
+    const el = document.querySelector(`.hotspot[data-id="${id}"]`);
+    if (el) el.classList.add('found');
+    if (h.type === 'dialogue') {
+      addPerson(h, scene);
+    } else {
+      addEvidence(h, scene);
+    }
+    checkProgression();
+  }
+
+  gameState.cardOpen = true;
+
+  const card    = document.getElementById('evidence-card');
+  const inner   = document.getElementById('card-inner');
+  const added   = document.getElementById('card-added');
+  const overlay = document.getElementById('card-overlay');
+
+  card.className = 'type-' + h.type;
+  added.classList.remove('show');
+
+  const typeLabel = { dialogue: 'Conversation', document: 'Document', object: 'Observation' };
+  const extra = isExtra(h);
+  card.classList.toggle('is-extra', extra);
+  const tag = h.content.tag || (extra ? 'Roman Life \u00b7 Optional' : typeLabel[h.type] || h.type);
+  let html = `<span class="card-type-tag">${esc(tag)}</span>`;
+  html += `<div class="card-title">${esc(h.content.title)}</div>`;
+
+  if (h.type === 'dialogue') {
+    if (h.content.desc) html += `<div class="card-desc">${esc(h.content.desc)}</div>`;
+    html += '<hr class="card-rule">';
+    // A line is a string, or { who, text } when the card overhears more than one speaker.
+    // The speaker's name is shown only when the voice changes.
+    let lastWho = null;
+    (h.content.lines || []).forEach(l => {
+      const who  = l.who && l.who !== lastWho ? `<span class="card-speaker">${esc(l.who)}</span>` : '';
+      const text = typeof l === 'string' ? l : l.text;
+      lastWho = l.who || null;
+      html += `<div class="card-line">${who}&ldquo;${esc(text)}&rdquo;</div>`;
+    });
+  } else {
+    html += '<hr class="card-rule">';
+    html += `<div class="card-body">${esc(h.content.text || '')}</div>`;
+  }
+  if (h.content.note) html += `<div class="card-goto-note">${esc(h.content.note)}</div>`;
+
+  // Doorways only work from the scene you are standing in, and not once the report is filed.
+  const canAct = local && !gameState.reportFiled;
+  if (canAct && h.transition) {
+    html += `<button class="card-transition-btn" onclick="closeCard();doProgression();">${esc(scene.progression.buttonText)}</button>`;
+  }
+  if (canAct && h.goto && GAME_DATA.scenes[h.goto]) {
+    const missing = (h.gotoRequires || []).find(r => !gameState.discovered.has(r));
+    if (!missing) {
+      if (h.gotoNote) html += `<div class="card-goto-note">${esc(h.gotoNote)}</div>`;
+      html += `<button class="card-transition-btn" onclick="closeCard();goToScene('${h.goto}');">${esc(h.gotoText || 'Go')}</button>`;
+    } else {
+      const hint = typeof h.gotoLocked === 'string' ? h.gotoLocked : (h.gotoLocked || {})[missing];
+      if (hint) html += `<div class="card-goto-locked">${esc(hint)}</div>`;
+    }
+  }
+
+  inner.innerHTML = html;
+  overlay.classList.add('open');
+  if (isNew) setTimeout(() => added.classList.add('show'), 200);
+  setTimeout(() => document.getElementById('card-close').focus(), 80);
+}
+
+function closeCard() {
+  gameState.cardOpen = false;
+  document.getElementById('card-overlay').classList.remove('open');
+  refreshHotspots();
+}
+
+// =============================================================
+// NOTEBOOK
+// =============================================================
+const POI_LABELS = ['No concern', 'Worth watching', 'Person of interest'];
+
+function notebookBadgeCount() {
+  return Object.keys(gameState.people).length + gameState.evidence.length;
+}
+
+function addEvidence(h, scene) {
+  if (gameState.evidence.find(e => e.id === h.id)) return;
+  gameState.evidence.push({ id: h.id, title: h.content.title || h.label, type: h.type, sceneName: scene.name });
+  document.getElementById('nb-badge').textContent = notebookBadgeCount();
+  renderNotebook();
+}
+
+function addPerson(h, scene) {
+  const names = (h.content.people && h.content.people.length) ? h.content.people : [h.label];
+  const noPoi = !!(h.noPoi || h.content.noPoi);
+  names.forEach(name => {
+    // Meeting someone again points their notebook entry at the newest conversation.
+    const existing = Object.values(gameState.people).find(p => p.name === name);
+    if (existing) {
+      existing.hotspotId = h.id;
+      existing.sceneName = scene.name;
+      return;
+    }
+    const key = h.id + '__' + name.replace(/\s+/g, '_');
+    gameState.people[key] = { id: key, hotspotId: h.id, name, sceneName: scene.name, poi: 0, notes: '', noPoi };
+  });
+  document.getElementById('nb-badge').textContent = notebookBadgeCount();
+  renderNotebook();
+}
+
+function renderNotebook() {
+  // People section
+  const peopleContainer = document.getElementById('nb-people');
+  peopleContainer.innerHTML = '';
+  const peopleKeys = Object.keys(gameState.people);
+  peopleKeys.forEach(key => {
+    const person = gameState.people[key];
+    const el = document.createElement('div');
+    el.className = 'nb-person-card';
+
+    // Name (clickable)
+    const nameBtn = document.createElement('button');
+    nameBtn.className = 'nb-person-name';
+    nameBtn.textContent = person.name;
+    nameBtn.addEventListener('click', () => {
+      if (isDesktopDocked()) {
+        openCard(person.hotspotId);
+      } else {
+        toggleNotebook();
+        setTimeout(() => openCard(person.hotspotId), 340);
+      }
+    });
+
+    // POI slider
+    const sliderWrap = document.createElement('div');
+    sliderWrap.className = 'nb-poi-wrap';
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.min = '0'; slider.max = '2'; slider.step = '1';
+    slider.value = String(person.poi);
+    slider.className = 'nb-poi-slider';
+    const poiLabel = document.createElement('div');
+    poiLabel.className = 'nb-poi-label';
+    poiLabel.textContent = POI_LABELS[person.poi];
+    slider.addEventListener('input', () => {
+      person.poi = parseInt(slider.value, 10);
+      poiLabel.textContent = POI_LABELS[person.poi];
+      gameState.people[key].poi = person.poi;
+    });
+    sliderWrap.appendChild(slider);
+    sliderWrap.appendChild(poiLabel);
+
+    // Notes textarea
+    const notes = document.createElement('textarea');
+    notes.className = 'nb-notes';
+    notes.placeholder = 'Your notes...';
+    notes.rows = 2;
+    notes.value = person.notes;
+    notes.addEventListener('input', () => {
+      gameState.people[key].notes = notes.value;
+    });
+
+    el.appendChild(nameBtn);
+    if (!person.noPoi) el.appendChild(sliderWrap);
+    el.appendChild(notes);
+    peopleContainer.appendChild(el);
+  });
+
+  // Evidence section
+  const evContainer = document.getElementById('nb-evidence');
+  evContainer.innerHTML = '';
+  gameState.evidence.forEach(entry => {
+    const el  = document.createElement('div');
+    el.className = 'nb-entry';
+    const dot = document.createElement('div');
+    dot.className = `nb-dot ${entry.type}`;
+    const info = document.createElement('div');
+    info.className = 'nb-info';
+    info.innerHTML = `<div class="nb-title">${esc(entry.title)}</div><div class="nb-type">${entry.type}</div>`;
+    el.appendChild(dot);
+    el.appendChild(info);
+    el.addEventListener('click', () => {
+      if (isDesktopDocked()) {
+        openCard(entry.id);
+      } else {
+        toggleNotebook();
+        setTimeout(() => openCard(entry.id), 340);
+      }
+    });
+    evContainer.appendChild(el);
+  });
+
+  // Show/hide empty state and sections
+  const empty = document.getElementById('nb-empty');
+  const hasAny = peopleKeys.length > 0 || gameState.evidence.length > 0;
+  if (empty) empty.style.display = hasAny ? 'none' : '';
+  const pSection = document.getElementById('nb-people-section');
+  if (pSection) pSection.style.display = peopleKeys.length > 0 ? '' : 'none';
+  const eSection = document.getElementById('nb-evidence-section');
+  if (eSection) eSection.style.display = gameState.evidence.length > 0 ? '' : 'none';
+
+  checkReportTab();
+  checkReportReady();
+}
+
+const REPORT_KEYS = ['who', 'what', 'where', 'when', 'why'];
+
+function updateReport(key, value) {
+  gameState.report[key] = value;
+  checkReportReady();
+}
+
+function reportInvestigationDone() {
+  return (GAME_DATA.report.requires || []).every(id => gameState.discovered.has(id) || gameState.visited.has(id));
+}
+
+function reportFieldsComplete() {
+  return REPORT_KEYS.every(k => (gameState.report[k] || '').trim().length > 0);
+}
+
+function checkReportReady() {
+  const btn = document.getElementById('report-submit');
+  const cap = document.getElementById('report-caption');
+  if (!btn || !cap) return;
+  if (gameState.reportFiled) {
+    btn.disabled = true;
+    btn.textContent = 'Report Filed';
+    cap.textContent = GAME_DATA.report.filedCaption;
+    return;
+  }
+  const done = reportInvestigationDone();
+  const full = reportFieldsComplete();
+  btn.disabled = !(done && full);
+  const R = GAME_DATA.report;
+  cap.textContent = !done ? R.lockedCaption : !full ? R.fieldsCaption : R.readyCaption;
+}
+
+// The gold dot marks news on the report: once when the tab opens up, again when it can be filed.
+function setReportDot(on) {
+  document.getElementById('nb-report-dot').style.display = on ? '' : 'none';
+  document.getElementById('nb-toggle').classList.toggle('has-news', on);
+}
+
+function checkReportTab() {
+  const tab = document.getElementById('tab-report');
+  if (!tab) return;
+  const unlocked = gameState.discovered.has(GAME_DATA.report.unlock);
+  tab.style.display = unlocked ? '' : 'none';
+  const milestone = !unlocked ? 0 : reportInvestigationDone() ? 2 : 1;
+  if (milestone > gameState.reportMilestone) {
+    gameState.reportMilestone = milestone;
+    if (gameState.notebookTab !== 'report') setReportDot(true);
+  }
+}
+
+function syncReportFields() {
+  ['who','what','where','when','why'].forEach(k => {
+    const el = document.getElementById('report-' + k);
+    if (el) el.value = gameState.report[k] || '';
+  });
+}
+
+function switchTab(tab) {
+  gameState.notebookTab = tab;
+  document.querySelectorAll('.nb-tab').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+  const notesArea  = document.getElementById('nb-scroll-area');
+  const reportArea = document.getElementById('nb-report-area');
+  if (tab === 'report') {
+    notesArea.style.display  = 'none';
+    reportArea.style.display = 'block';
+    setReportDot(false);
+    syncReportFields();
+  } else {
+    notesArea.style.display  = '';
+    reportArea.style.display = 'none';
+  }
+}
+
+function toggleNotebook() {
+  if (isDesktopDocked()) return; // on desktop it's always visible
+  gameState.notebookOpen = !gameState.notebookOpen;
+  document.getElementById('notebook').classList.toggle('open', gameState.notebookOpen);
+}
+
+// =============================================================
+// PROGRESSION
+// =============================================================
+function checkProgression() {
+  const scene = GAME_DATA.scenes[gameState.currentScene];
+  const prog  = scene.progression;
+  if (!prog || !prog.required || prog.required.length === 0) {
+    document.getElementById('progress-btn').classList.remove('show');
+    return;
+  }
+  const met = prog.required.every(id => gameState.discovered.has(id));
+  document.getElementById('progress-btn').classList.toggle('show', met);
+}
+
+function runTransition(act, title, sub, midFn, endMs) {
+  const overlay = document.getElementById('transition');
+  const inner   = document.getElementById('trans-inner');
+  inner.querySelector('.trans-act').textContent   = act   || '';
+  inner.querySelector('.trans-title').textContent = title || '';
+  inner.querySelector('.trans-sub').textContent   = sub   || '';
+  overlay.classList.add('on');
+  if (midFn) setTimeout(midFn, 900);
+  setTimeout(() => overlay.classList.remove('on'), endMs || 2200);
+}
+
+function goToScene(targetId, fallbackLabel) {
+  const target = GAME_DATA.scenes[targetId];
+  if (target) {
+    runTransition(target.actLabel, target.name, target.subtitle, () => { loadScene(targetId); setPan(0, false); });
+  } else {
+    runTransition('Coming Soon', fallbackLabel || 'Next Scene', '', null, 2800);
+  }
+}
+
+function doProgression() {
+  const scene = GAME_DATA.scenes[gameState.currentScene];
+  const prog  = scene.progression || {};
+  goToScene(prog.nextScene, prog.buttonText);
+}
+
+
+// =============================================================
+// ENDING: File Report, the patron's question, the names, the
+// morning on the Capitol, ten years later, the history, the review.
+// =============================================================
+const ending = { verdict: null, named: new Set(), listGiven: false };
+
+function paras(text, cls) {
+  return String(text || '').split(/\n\s*\n/)
+    .map(p => `<p class="end-p${cls ? ' ' + cls : ''}">${esc(p)}</p>`).join('');
+}
+
+function showEnding(html) {
+  document.getElementById('ending-inner').innerHTML = html;
+  document.getElementById('ending-overlay').classList.add('open');
+  document.getElementById('ending-card').scrollTop = 0;
+}
+
+function closeEnding() {
+  document.getElementById('ending-overlay').classList.remove('open');
+}
+
+function setLocationLabels(name, sub, act) {
+  document.getElementById('loc-name').textContent = name;
+  document.getElementById('loc-sub').textContent  = sub;
+  document.getElementById('loc-act').textContent  = act;
+  document.getElementById('nb-loc').textContent   = name + ' · ' + act;
+}
+
+function fileReport() {
+  if (gameState.reportFiled || !reportInvestigationDone() || !reportFieldsComplete()) return;
+  if (!isDesktopDocked() && gameState.notebookOpen) toggleNotebook();
+  if (gameState.cardOpen) closeCard();
+  const E = GAME_DATA.ending, c = E.confirm;
+  showEnding(`
+    <span class="end-kicker">${esc(E.caseLabel)}</span>
+    <div class="end-title">${esc(c.title)}</div>
+    <hr class="card-rule">
+    ${paras(c.text)}
+    <div class="end-actions">
+      <button class="end-btn-secondary" onclick="closeEnding()">Not Yet</button>
+      <button class="card-transition-btn" onclick="beginEnding()">${esc(E.carryText)}</button>
+    </div>`);
+}
+
+function beginEnding() {
+  const E = GAME_DATA.ending;
+  gameState.reportFiled = true;
+  document.querySelectorAll('.report-textarea').forEach(t => { t.readOnly = true; });
+  checkReportReady();
+  runTransition(E.act, E.place, E.time, () => {
+    document.body.classList.add('ending-mode');
+    loadScene(E.scene);
+    setLocationLabels(E.place, E.time, E.act);
+    showVerdictPage();
+  });
+}
+
+function showVerdictPage() {
+  const E = GAME_DATA.ending, V = E.verdict;
+  const opts = V.options
+    .filter(o => !o.requiresAny || o.requiresAny.some(id => gameState.discovered.has(id)))
+    .map(o => `<button class="end-verdict" onclick="chooseVerdict('${o.id}')">${esc(o.label)}<small>${esc(o.note || '')}</small></button>`)
+    .join('');
+  showEnding(`
+    <span class="end-kicker">${esc(E.act)}</span>
+    <div class="end-title">${esc(E.patron)}</div>
+    <hr class="card-rule">
+    ${paras(V.intro)}
+    <div class="end-verdicts">${opts}</div>`);
+}
+
+function chooseVerdict(id) {
+  ending.verdict = id;
+  if (id === 'accuse') {
+    ending.named = new Set();
+    ending.listGiven = false;
+    showOutcomePage();
+  } else {
+    showNamesPage();
+  }
+}
+
+function endingCandidates() {
+  return Object.values(gameState.people)
+    .filter(p => !p.noPoi)
+    .sort((a, b) => b.poi - a.poi);
+}
+
+function nameRow(name, sub, on, attr) {
+  return `
+    <div class="end-name-row">
+      <div class="end-name-info">
+        <div class="end-name">${esc(name)}</div>
+        <div class="end-name-poi">${esc(sub)}</div>
+      </div>
+      <button class="end-toggle${on ? ' on' : ''}" ${attr} onclick="toggleEndingName(this)">${on ? 'Named' : 'Not Named'}</button>
+    </div>`;
+}
+
+function showNamesPage() {
+  const E = GAME_DATA.ending, N = E.names;
+  const people = endingCandidates();
+  ending.named = new Set(people.filter(p => p.poi === 2).map(p => p.name));
+  ending.listGiven = false;
+  let rows = people.map(p => nameRow(p.name, POI_LABELS[p.poi], ending.named.has(p.name), `data-name="${esc(p.name)}"`)).join('');
+  if (gameState.discovered.has(N.listId)) rows += nameRow(N.listLabel, N.listNote, false, 'data-list="1"');
+  showEnding(`
+    <span class="end-kicker">${esc(E.act)}</span>
+    <div class="end-title">${esc(E.patron)}</div>
+    <hr class="card-rule">
+    ${paras(ending.verdict === 'yes' ? N.intro : N.introNo)}
+    ${rows ? paras(N.note, 'quiet') + `<div class="end-names">${rows}</div>` : ''}
+    <div class="end-actions">
+      <button class="card-transition-btn" id="end-give" onclick="showOutcomePage()"></button>
+    </div>`);
+  updateGiveButton();
+}
+
+function toggleEndingName(btn) {
+  let on;
+  if (btn.dataset.list) {
+    ending.listGiven = !ending.listGiven;
+    on = ending.listGiven;
+  } else {
+    const name = btn.dataset.name;
+    if (ending.named.has(name)) ending.named.delete(name); else ending.named.add(name);
+    on = ending.named.has(name);
+  }
+  btn.classList.toggle('on', on);
+  btn.textContent = on ? 'Named' : 'Not Named';
+  updateGiveButton();
+}
+
+function updateGiveButton() {
+  const btn = document.getElementById('end-give');
+  if (!btn) return;
+  btn.textContent = (ending.named.size || ending.listGiven) ? 'Hand Him the Names' : 'Give Him No Names';
+}
+
+function endingResult() {
+  const E = GAME_DATA.ending;
+  const named = [...ending.named];
+  return {
+    named,
+    anyNamed: named.length > 0 || ending.listGiven,
+    broke:    ending.listGiven || named.some(n => E.fates[n] && E.fates[n].breaks)
+  };
+}
+
+function showOutcomePage() {
+  const E = GAME_DATA.ending, R = E.reaction;
+  const r = endingResult();
+  const v = ending.verdict;
+  let html = `<span class="end-kicker">${esc(E.act)}</span>
+    <div class="end-title">${esc(E.patron)}</div><hr class="card-rule">`;
+
+  if (v === 'accuse') {
+    html += paras(R.accuse);
+  } else if (r.anyNamed) {
+    html += paras(v === 'yes' ? R.names : R.namesNo);
+    const echoesCalvus = ending.listGiven || r.named.some(n => E.calvusList.includes(n));
+    if (gameState.discovered.has('informer_note') && echoesCalvus) html += paras(R.calvusNames);
+  } else {
+    html += paras(R.none);
+    if (gameState.discovered.has('informer_note')) html += paras(R.calvusNone);
+  }
+
+  html += `<div class="end-head">The Capitol</div>`;
+  html += paras(E.capitol[v]);
+  html += paras(E.death);
+
+  if (r.anyNamed) {
+    html += `<div class="end-head">What Became of Them</div>`;
+    r.named.forEach(n => {
+      const f = E.fates[n];
+      html += paras(f ? f.text : E.fateDefault.replace('{name}', n));
+    });
+    if (ending.listGiven) html += paras(E.listFate);
+  }
+
+  html += `<div class="end-head">The Land</div>`;
+  html += paras(r.broke ? E.outcome.broken : E.outcome.strike);
+  (E.outcome.codas || []).forEach(c => {
+    const met = Object.values(gameState.people).some(p => p.name === c.person);
+    if (met && !ending.named.has(c.person) && c.when === (r.broke ? 'broken' : 'strike')) html += paras(c.text);
+  });
+  html += `<div class="end-actions"><button class="card-transition-btn" onclick="goToEpilogue()">${esc(E.epilogue.heading)}</button></div>`;
+  showEnding(html);
+}
+
+function goToEpilogue() {
+  const P = GAME_DATA.ending.epilogue;
+  runTransition(P.act, P.title, P.sub, () => {
+    loadScene(P.scene);
+    setLocationLabels(P.title, P.sub, P.act);
+    showEpiloguePage();
+  });
+}
+
+function showEpiloguePage() {
+  const P = GAME_DATA.ending.epilogue;
+  const v = P[ending.verdict] || P.no;
+  let html = `<span class="end-kicker">${esc(P.act)}</span>
+    <div class="end-title">${esc(P.heading)}</div><hr class="card-rule">
+    ${paras(v.before)}
+    <div class="end-stamp${ending.verdict === 'yes' ? ' good' : ''}">${esc(v.stamp)}</div>
+    ${paras(v.after)}`;
+  if (gameState.discovered.has('informer_note')) html += paras(P.calvus);
+  html += paras(P.gaius);
+  html += paras(P.close, 'quiet');
+  html += `<div class="end-actions"><button class="card-transition-btn" onclick="showHistoryPage()">The History Behind the Story</button></div>`;
+  showEnding(html);
+}
+
+function showHistoryPage() {
+  const H = GAME_DATA.ending.history;
+  let html = `<span class="end-kicker">Historical Note</span>
+    <div class="end-title">The History Behind the Story</div><hr class="card-rule">
+    ${paras(H.intro)}`;
+  H.items.forEach(it => { html += `<div class="end-item-title">${esc(it.title)}</div>${paras(it.text)}`; });
+  html += `<div class="end-actions"><button class="card-transition-btn" onclick="showReviewPage()">Review Your Inquiry</button></div>`;
+  showEnding(html);
+}
+
+function allClueIds() {
+  const ids = [];
+  Object.values(GAME_DATA.scenes).forEach(s => {
+    s.hotspots.forEach(h => { if (h.kind === 'clue') ids.push(h.id); });
+  });
+  return ids;
+}
+
+function discoveredHerrings() {
+  const found = [];
+  Object.values(GAME_DATA.scenes).forEach(s => s.hotspots.forEach(h => {
+    if (h.kind === 'herring' && gameState.discovered.has(h.id)) found.push(h);
+  }));
+  return found;
+}
+
+function clueTitle(id) {
+  const f = findHotspot(id);
+  return f ? (f.h.content && f.h.content.title) || f.h.label : id;
+}
+
+function verdictText() {
+  const o = GAME_DATA.ending.verdict.options.find(x => x.id === ending.verdict);
+  return o ? o.label : '';
+}
+
+function namesGivenText() {
+  if (ending.verdict === 'accuse') return 'None. You were put out of the temple first.';
+  const list = [...ending.named];
+  if (ending.listGiven) list.push(GAME_DATA.ending.names.listGivenText);
+  return list.length ? list.join(', ') : 'None';
+}
+
+const REPORT_LABELS = { who: 'Quis · Who', what: 'Quid · What', where: 'Ubi · Where', when: 'Quando · When', why: 'Cur · Why' };
+
+function showReviewPage() {
+  const E = GAME_DATA.ending;
+  let html = `<span class="end-kicker">${esc(E.caseLabel)}</span>
+    <div class="end-title">Your Report</div><hr class="card-rule">`;
+  REPORT_KEYS.forEach(k => {
+    html += `<div class="end-q">${REPORT_LABELS[k]}</div><div class="end-a">${esc(gameState.report[k])}</div>`;
+  });
+  html += `<div class="end-q">Does He Seek a Crown?</div><div class="end-a">${esc(verdictText())}</div>`;
+  html += `<div class="end-q">Names Given to Your Patron</div><div class="end-a">${esc(namesGivenText())}</div>`;
+
+  const all = allClueIds();
+  const foundCount = all.filter(id => gameState.discovered.has(id)).length;
+  html += `<div class="end-head">What You Uncovered</div>`;
+  html += paras(`You found ${foundCount} of the ${all.length} clues. Here is what drove the Roman poor to follow Tiberius Gracchus, what his enemies feared, and how much of it you saw.`, 'quiet');
+  E.review.forEach(cat => {
+    const got = cat.ids.filter(id => gameState.discovered.has(id));
+    html += `<div class="end-cat">
+      <div class="end-cat-top"><span class="end-cat-title">${esc(cat.title)}</span><span class="end-cat-count">${got.length} of ${cat.ids.length}</span></div>
+      <div class="end-cat-desc">${esc(cat.text)}</div>
+      ${got.length ? `<div class="end-cat-found">${esc(got.map(clueTitle).join(' · '))}</div>` : '<div class="end-cat-none">Nothing found here.</div>'}
+    </div>`;
+  });
+  const herrings = discoveredHerrings();
+  if (herrings.length) {
+    html += `<div class="end-head">Rumours and Dead Ends</div>`;
+    html += paras('Not every story you heard in Rome was true.', 'quiet');
+    herrings.forEach(h => { html += `<div class="end-item-title">${esc(h.content.title)}</div>${paras(h.debunk)}`; });
+  }
+  html += `<div class="end-actions">
+      <button class="end-btn-secondary" id="end-copy" onclick="copyFinalReport()">Copy Report</button>
+      <button class="card-transition-btn" onclick="clearSave(); location.reload()">Play Again</button>
+    </div>`;
+  showEnding(html);
+}
+
+function finalReportText() {
+  const lines = ['TO P. CORNELIUS SCIPIO NASICA, PONTIFEX MAXIMUS', 'INQUIRY INTO TI. SEMPRONIUS GRACCHUS, TRIBUNE OF THE PLEBS', 'REPORT OF HIS FREEDMAN', ''];
+  REPORT_KEYS.forEach(k => { lines.push(REPORT_LABELS[k].toUpperCase() + ': ' + (gameState.report[k] || '').trim(), ''); });
+  lines.push('DOES HE SEEK A CROWN? ' + verdictText(), '');
+  lines.push('NAMES GIVEN TO THE PATRON: ' + namesGivenText());
+  return lines.join('\n');
+}
+
+function copyFinalReport() {
+  const text = finalReportText();
+  const btn  = document.getElementById('end-copy');
+  const done = () => {
+    if (!btn) return;
+    btn.textContent = 'Copied';
+    setTimeout(() => { btn.textContent = 'Copy Report'; }, 1800);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+  } else {
+    fallbackCopy(text, done);
+  }
+}
+
+function fallbackCopy(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.position = 'fixed';
+  ta.style.opacity  = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { if (document.execCommand('copy')) done(); } catch (e) {}
+  ta.remove();
+}
+
+// =============================================================
+// INPUT: MOUSE
+// =============================================================
+function initInput() {
+  const vp = document.getElementById('game-viewport');
+
+  vp.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    pan.dragging = true; pan.moved = false;
+    pan.startMX = e.clientX; pan.startPX = pan.x;
+    document.getElementById('panorama-container').style.transition = 'none';
+    vp.classList.add('dragging');
+  });
+  window.addEventListener('mousemove', e => {
+    if (!pan.dragging) return;
+    const dx = e.clientX - pan.startMX;
+    if (Math.abs(dx) > DRAG_THRESHOLD) pan.moved = true;
+    setPan(pan.startPX + dx, false);
+  });
+  window.addEventListener('mouseup', () => {
+    pan.dragging = false;
+    document.getElementById('game-viewport').classList.remove('dragging');
+    setTimeout(() => { pan.moved = false; }, 50);
+  });
+
+  // Touch
+  let tStartX = 0, tStartP = 0;
+  vp.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) return;
+    pan.moved = false;
+    tStartX = e.touches[0].clientX; tStartP = pan.x;
+    document.getElementById('panorama-container').style.transition = 'none';
+  }, { passive: true });
+  vp.addEventListener('touchmove', e => {
+    if (e.touches.length !== 1) return;
+    const dx = e.touches[0].clientX - tStartX;
+    if (Math.abs(dx) > DRAG_THRESHOLD) pan.moved = true;
+    setPan(tStartP + dx, false);
+  }, { passive: true });
+  vp.addEventListener('touchend', () => {
+    setTimeout(() => { pan.moved = false; }, 50);
+  });
+
+  // Keyboard
+  window.addEventListener('keydown', e => {
+    if (gameState.cardOpen) { if (e.key === 'Escape') closeCard(); return; }
+    if (gameState.notebookOpen) { if (e.key === 'Escape') toggleNotebook(); return; }
+    if (e.key === 'ArrowLeft')  panBy( 140, true);
+    if (e.key === 'ArrowRight') panBy(-140, true);
+  });
+
+  // Chevrons
+  document.getElementById('chev-left').addEventListener('click',  () => panBy( 220, true));
+  document.getElementById('chev-right').addEventListener('click', () => panBy(-220, true));
+
+  // Resize
+  window.addEventListener('resize', () => { applyDockedLayout(); computeBounds(); });
+}
+
+// =============================================================
+// UI BINDINGS
+// =============================================================
+function bindUI() {
+  document.getElementById('card-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('card-overlay')) closeCard();
+  });
+  document.getElementById('card-close').addEventListener('click', closeCard);
+  document.getElementById('nb-toggle').addEventListener('click', toggleNotebook);
+  document.getElementById('nb-close').addEventListener('click',  toggleNotebook);
+  document.getElementById('progress-btn').addEventListener('click', doProgression);
+}
+
+// =============================================================
+// TUNE MODE: tap gear icon (top-left) to activate
+// Guides you through each hotspot by name, one at a time.
+// =============================================================
+const tuneState = {
+  active:  false,
+  step:    0,       // index into current scene's hotspots
+  results: []       // [{id, label, x, y}], filled as you tap
+};
+
+function initTuneMode() {
+  document.getElementById('panorama-container').addEventListener('click', e => {
+    if (!tuneState.active) return;
+    if (pan.moved) return;
+    recordTuneTap(e.clientX, e.clientY);
+  });
+
+  document.getElementById('tune-copy-btn').addEventListener('click', copyTuneOutput);
+  document.getElementById('tune-clear-btn').addEventListener('click', restartTune);
+  document.getElementById('tune-toggle-btn').addEventListener('click', toggleTuneMode);
+  document.getElementById('tune-exit-btn').addEventListener('click', toggleTuneMode);
+  document.getElementById('tune-skip-btn').addEventListener('click', skipTuneStep);
+  document.getElementById('tune-tab').addEventListener('click', toggleTunePanel);
+
+  // Scene jumper: reach any scene for tuning without playing up to it.
+  const sel = document.getElementById('tune-scene');
+  GAME_DATA.sceneOrder.forEach(id => {
+    const s = GAME_DATA.scenes[id];
+    if (!s) return;
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = s.name + ': ' + s.subtitle;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', () => { loadScene(sel.value); restartTune(); });
+
+  if (location.search.includes('tune')) toggleTuneMode();
+}
+
+function toggleTuneMode() {
+  tuneState.active = !tuneState.active;
+  document.body.classList.toggle('tune-mode', tuneState.active);
+  document.getElementById('tune-toggle-btn').classList.toggle('active', tuneState.active);
+  if (tuneState.active) {
+    document.getElementById('tune-scene').value = gameState.currentScene;
+    restartTune();
+  } else {
+    document.querySelectorAll('.tune-marker').forEach(el => el.remove());
+  }
+}
+
+function toggleTunePanel() {
+  const panel = document.getElementById('tune-panel');
+  const tab   = document.getElementById('tune-tab');
+  const open  = panel.classList.toggle('open');
+  tab.textContent = open ? '\u25bc Results' : '\u25b2 Results';
+}
+
+function restartTune() {
+  tuneState.step    = 0;
+  tuneState.results = [];
+  document.querySelectorAll('.tune-marker').forEach(el => el.remove());
+  document.getElementById('tune-panel').classList.remove('open');
+  document.getElementById('tune-tab').textContent = '\u25b2 Results';
+  renderTunePrompt();
+  renderTuneOutput();
+}
+
+function currentHotspots() {
+  return GAME_DATA.scenes[gameState.currentScene].hotspots;
+}
+
+function renderTunePrompt() {
+  const hotspots = currentHotspots();
+  const prompt   = document.getElementById('tune-prompt');
+  if (tuneState.step >= hotspots.length) {
+    prompt.textContent = '\u2713 All done! Copy the coordinates below.';
+    return;
+  }
+  const h     = hotspots[tuneState.step];
+  const total = hotspots.length;
+  prompt.textContent = `Tap: ${h.label}  (${tuneState.step + 1} of ${total})`;
+}
+
+function recordTuneTap(clientX, clientY) {
+  const hotspots = currentHotspots();
+  if (tuneState.step >= hotspots.length) return;
+
+  const h       = hotspots[tuneState.step];
+  const rect    = document.getElementById('panorama-container').getBoundingClientRect();
+  const x       = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+  const y       = Math.max(0, Math.min(1, clientY / window.innerHeight));
+
+  // Store result
+  tuneState.results[tuneState.step] = { id: h.id, label: h.label, x, y };
+
+  // Place marker
+  const layer = document.getElementById('hotspot-layer');
+  // Remove any previous marker for this step
+  const prev = layer.querySelector(`.tune-marker[data-step="${tuneState.step}"]`);
+  if (prev) prev.remove();
+
+  const el = document.createElement('div');
+  el.className       = 'tune-marker';
+  el.dataset.step    = tuneState.step;
+  el.style.left      = (x * 100) + '%';
+  el.style.top       = (y * 100) + '%';
+  el.innerHTML = `
+    <div class="tune-marker-ring"></div>
+    <div class="tune-marker-dot"></div>
+    <div class="tune-marker-label">${h.label}</div>`;
+  layer.appendChild(el);
+
+  tuneState.step++;
+  renderTunePrompt();
+  renderTuneOutput();
+  // Auto-open panel when all done
+  if (tuneState.step >= currentHotspots().length) {
+    document.getElementById('tune-panel').classList.add('open');
+    document.getElementById('tune-tab').textContent = '\u25bc Results';
+  }
+}
+
+function skipTuneStep() {
+  const hotspots = currentHotspots();
+  if (tuneState.step >= hotspots.length) return;
+  // Mark as skipped (keep existing coords from GAME_DATA)
+  const h = hotspots[tuneState.step];
+  tuneState.results[tuneState.step] = { id: h.id, label: h.label, x: h.x, y: h.y, skipped: true };
+  tuneState.step++;
+  renderTunePrompt();
+  renderTuneOutput();
+}
+
+function renderTuneOutput() {
+  const hotspots = currentHotspots();
+  const lines = hotspots.map((h, i) => {
+    const r = tuneState.results[i];
+    if (!r)            return `  // ${h.label}: not placed yet`;
+    if (r.skipped)     return `  // ${h.label}: skipped (keeping x:${h.x}, y:${h.y})`;
+    return `  id:'${r.id}', x:${r.x.toFixed(3)}, y:${r.y.toFixed(3)},  // ${r.label}`;
+  });
+  document.getElementById('tune-output').textContent = lines.join('\n');
+}
+
+function copyTuneOutput() {
+  // Only copy the placed (non-skipped, non-pending) lines
+  const hotspots = currentHotspots();
+  const lines = hotspots.map((h, i) => {
+    const r = tuneState.results[i];
+    if (!r || r.skipped) return null;
+    return `  id:'${r.id}', x:${r.x.toFixed(3)}, y:${r.y.toFixed(3)},`;
+  }).filter(Boolean);
+
+  const text = lines.join('\n');
+  const btn  = document.getElementById('tune-copy-btn');
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy All', 1800);
+    });
+  } else {
+    const el = document.getElementById('tune-output');
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+}
+
+// =============================================================
+// UTILITY
+// =============================================================
+function esc(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// =============================================================
+// SAVING: progress is kept in this browser, on this device.
+// Saving stops once the report is filed, so reopening during the
+// ending returns the player to the temple with the report unfiled.
+// =============================================================
+const SAVE_KEY = 'regnum-save-v1';
+let saveEnabled = false;
+
+function readSave() {
+  try { const raw = localStorage.getItem(SAVE_KEY); return raw ? JSON.parse(raw) : null; }
+  catch (e) { return null; }
+}
+
+function clearSave() {
+  try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+}
+
+function saveGame() {
+  if (!saveEnabled || gameState.reportFiled) return;
+  // Nothing worth keeping until the player has opened something.
+  if (!gameState.discovered.size) return;
+  const data = {
+    savedAt: Date.now(),
+    currentScene: gameState.currentScene,
+    discovered: [...gameState.discovered],
+    visited: [...gameState.visited],
+    evidence: gameState.evidence,
+    people: gameState.people,
+    report: gameState.report,
+    reportMilestone: gameState.reportMilestone,
+    notebookTab: gameState.notebookTab
+  };
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch (e) {}
+}
+
+function restoreSave(s) {
+  gameState.discovered = new Set(s.discovered || []);
+  gameState.visited = new Set(s.visited || []);
+  gameState.evidence = s.evidence || [];
+  gameState.people = s.people || {};
+  Object.assign(gameState.report, s.report || {});
+  gameState.reportMilestone = s.reportMilestone || 0;
+  document.getElementById('nb-badge').textContent = notebookBadgeCount();
+  renderNotebook();
+  syncReportFields();
+  const scene = GAME_DATA.scenes[s.currentScene] ? s.currentScene : GAME_DATA.sceneOrder[0];
+  loadScene(scene);
+  switchTab(s.notebookTab === 'report' && gameState.discovered.has(GAME_DATA.report.unlock) ? 'report' : 'notes');
+}
+
+function offerContinue() {
+  const s = readSave();
+  if (!s || !s.discovered || !s.discovered.length) { saveEnabled = true; return; }
+  const scene = GAME_DATA.scenes[s.currentScene];
+  const people = Object.keys(s.people || {}).length;
+  const ev = (s.evidence || []).length;
+  window._pendingSave = s;
+  showEnding(`
+    <span class="end-kicker">Welcome Back</span>
+    <div class="end-title">Continue Your Investigation?</div>
+    <hr class="card-rule">
+    ${paras(`Your investigation is saved on this device: ${people} ${people === 1 ? 'person' : 'people'} and ${ev} ${ev === 1 ? 'piece' : 'pieces'} of evidence in your notebook. You were last at ${scene ? scene.name : 'the start'}.`)}
+    <div class="end-actions">
+      <button class="end-btn-secondary" onclick="confirmStartOver()">Start Over</button>
+      <button class="card-transition-btn" onclick="continueSaved()">Continue</button>
+    </div>`);
+}
+
+function continueSaved() {
+  closeEnding();
+  restoreSave(window._pendingSave);
+  saveEnabled = true;
+}
+
+function confirmStartOver() {
+  showEnding(`
+    <span class="end-kicker">Start Over</span>
+    <div class="end-title">Erase Your Notes?</div>
+    <hr class="card-rule">
+    ${paras('Starting over erases everything in your notebook and your report on this device. This cannot be undone.')}
+    <div class="end-actions">
+      <button class="end-btn-secondary" onclick="offerContinue()">Go Back</button>
+      <button class="card-transition-btn" onclick="startFresh()">Erase and Start Over</button>
+    </div>`);
+}
+
+function startFresh() {
+  clearSave();
+  closeEnding();
+  saveEnabled = true;
+}
+
+// =============================================================
+// BOOT
+// =============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  applyDockedLayout();
+  bindUI();
+  initInput();
+  loadScene(gameState.currentScene);
+  if (DEV_TOOLS) initTuneMode();
+  else document.getElementById('tune-toggle-btn').style.display = 'none';
+  offerContinue();
+  setInterval(saveGame, 1500);
+  window.addEventListener('pagehide', saveGame);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) saveGame(); });
+});
+</script>
+</body>
+</html>
