@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Regnum Trailer</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+  .layer { position: absolute; inset: 0; opacity: 0; overflow: hidden; }
+  .pano { position: absolute; top: 0; height: 1080px; will-change: transform; }
+  .shot { position: absolute; left: 250px; top: 40px; width: 1420px; height: 799px; transform-origin: 50% 40%;
+    border: 2px solid #6b5326; border-radius: 6px; box-shadow: 0 20px 60px rgba(0,0,0,0.8); }
+  .shade { position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.35) 28%, rgba(0,0,0,0) 50%),
+                radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,0.55) 100%); }
+  .cap { position: absolute; left: 110px; bottom: 96px; right: 110px; opacity: 0; }
+  .parch .cap { left: 250px; right: 250px; bottom: 44px; }
+  .parch .cap .t { font-size: 54px; }
+  .parch .cap .k { margin-bottom: 8px; }
+  .cap .k { font-family: 'Cinzel', serif; font-size: 22px; letter-spacing: 8px; color: #d9b45a; text-transform: uppercase; margin-bottom: 14px; }
+  .cap .t { font-family: 'Cinzel', serif; font-weight: 700; font-size: 64px; line-height: 1.12; color: #f4ead2;
+    text-shadow: 0 3px 18px rgba(0,0,0,0.9); }
+  .cap .q { font-family: 'Libre Baskerville', serif; font-style: italic; font-size: 34px; line-height: 1.45; color: #efe3c4;
+    text-shadow: 0 2px 14px rgba(0,0,0,0.95); max-width: 1500px; margin-top: 18px; }
+  .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .big { font-family: 'Cinzel', serif; font-weight: 700; color: #f4ead2; letter-spacing: 18px; }
+  .small { font-family: 'Cinzel', serif; color: #d9b45a; letter-spacing: 10px; text-transform: uppercase; }
+  .serif { font-family: 'Libre Baskerville', serif; color: #e8dcc0; }
+  .rule { width: 0; height: 2px; background: #b8923e; margin: 30px auto; }
+  .parch { background: radial-gradient(ellipse at center, #2a1f14 0%, #120d08 70%, #050403 100%); }
+  .feat { font-family: 'Libre Baskerville', serif; font-size: 38px; color: #efe3c4; line-height: 1.3; margin: 16px 0; opacity: 0; }
+  .feat b { font-family: 'Cinzel', serif; color: #d9b45a; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- 0: opening text -->
+<div class="layer" id="L0"><div class="center">
+  <div class="small" id="o1" style="font-size:30px;opacity:0">Rome &middot; 133 BC</div>
+  <div class="serif" id="o2" style="font-size:40px;font-style:italic;margin-top:40px;opacity:0;max-width:1300px;line-height:1.5">A young tribune wants to give land to the poor.<br>The Senate says he wants a crown.</div>
+</div></div>
+
+<div class="layer" id="L1"><img class="pano" id="P1" src="../../art/nasica_atrium.jpg"><div class="shade"></div>
+  <div class="cap" id="C1"><div class="k">You are a freedman of Scipio Nasica</div><div class="q">&ldquo;Does Tiberius Gracchus mean to make himself king? Go among them. Bring me proof. Bring me names.&rdquo;</div></div></div>
+
+<div class="layer" id="L2"><img class="pano" id="P2" src="../../art/forum_day.jpg"><div class="shade"></div>
+  <div class="cap" id="C2"><div class="k">Investigate</div><div class="t">Walk the streets of Republican Rome.</div></div></div>
+
+<div class="layer parch" id="L3"><img class="shot" id="S3" src="../01_forum_tiberius_speech.png">
+  <div class="cap" id="C3"><div class="k">Real history, real words</div><div class="t">Hear the speeches that shook the Republic.</div></div></div>
+
+<div class="layer" id="L4"><img class="pano" id="P4" src="../../art/subura_insula.jpg"><div class="shade"></div>
+  <div class="cap" id="C4"><div class="k">Talk to everyone</div><div class="t">Meet the people the law was for.</div></div></div>
+
+<div class="layer parch" id="L5"><img class="shot" id="S5" src="../02_subura_tertia.png">
+  <div class="cap" id="C5"><div class="k">Veterans &middot; widows &middot; slaves &middot; a girl who runs messages</div><div class="t">Every voice is evidence.</div></div></div>
+
+<div class="layer" id="L6"><img class="pano" id="P6" src="../../art/tiburtina_estate.jpg"><div class="shade"></div>
+  <div class="cap" id="C6"><div class="k">Follow the land</div><div class="t">See where the trouble started.</div></div></div>
+
+<div class="layer parch" id="L7"><img class="shot" id="S7" src="../04_gracchi_crown.png">
+  <div class="cap" id="C7"><div class="k">Rumours &middot; red herrings &middot; dead ends</div><div class="t">Not every clue is what it seems.</div></div></div>
+
+<div class="layer" id="L8"><img class="pano" id="P8" src="../../art/vigil_night.jpg"><div class="shade"></div>
+  <div class="cap" id="C8"><div class="k">The night before the vote</div><div class="q">&ldquo;Friends. I have no guards but you.&rdquo;</div></div></div>
+
+<div class="layer" id="L9"><img class="pano" id="P9" src="../../art/fides_night.jpg"><div class="shade"></div>
+  <div class="cap" id="C9"><div class="k">The Temple of Good Faith</div><div class="t">Then find out what your patron is hiding.</div></div></div>
+
+<div class="layer parch" id="L10"><img class="shot" id="S10" src="../08_verdict.png">
+  <div class="cap" id="C10"><div class="k">Your report &middot; your verdict &middot; their fate</div><div class="t">What will you tell him?</div></div></div>
+
+<div class="layer parch" id="L11"><div class="center">
+  <div class="feat" id="F1"><b>7</b> illustrated scenes of Republican Rome</div>
+  <div class="feat" id="F2"><b>100+</b> conversations, documents &amp; clues</div>
+  <div class="feat" id="F3">Students write a five-question report: <b>Quis &middot; Quid &middot; Ubi &middot; Quando &middot; Cur</b></div>
+  <div class="feat" id="F4"><b>3</b> endings, a history debrief &amp; a case review</div>
+  <div class="feat" id="F5">Runs in any browser &middot; no logins &middot; no installs</div>
+</div></div>
+
+<div class="layer parch" id="L12"><div class="center">
+  <div class="big" id="T1" style="font-size:150px;opacity:0">REGNUM</div>
+  <div class="rule" id="T2"></div>
+  <div class="serif" id="T3" style="font-size:38px;font-style:italic;opacity:0">A history investigation game about the Gracchi and the fall of the Roman Republic</div>
+  <div class="small" id="T4" style="font-size:26px;margin-top:50px;opacity:0">For middle &amp; high school</div>
+</div></div>
+
+<script>
+// Timeline: [layerId, start, end]. Layers cross-fade over FADE seconds.
+const FADE = 0.8;
+const SEG = [
+  ['L0', 0, 6.5], ['L1', 6, 12.5], ['L2', 12, 17], ['L3', 16.5, 21.5], ['L4', 21, 26], ['L5', 25.5, 30.5],
+  ['L6', 30, 35], ['L7', 34.5, 39.5], ['L8', 39, 44.5], ['L9', 44, 49], ['L10', 48.5, 53.5],
+  ['L11', 53, 61.5], ['L12', 61, 70]
+];
+const DURATION = 70;
+// Panorama pans: fraction of the image width centred at start and end.
+const PANS = { P1: [0.22, 0.50], P2: [0.20, 0.55], P4: [0.20, 0.62], P6: [0.30, 0.70], P8: [0.30, 0.55], P9: [0.25, 0.62] };
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const ease = x => x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
+const fadeIn = (t, a, d = 0.9) => clamp((t - a) / d, 0, 1);
+const $ = id => document.getElementById(id);
+
+function render(t) {
+  for (const [id, a, b] of SEG) {
+    const el = $(id);
+    let o = Math.min(fadeIn(t, a, FADE), 1 - fadeIn(t, b - FADE, FADE));
+    if (id === 'L0' && t < 0.01) o = 1;
+    el.style.opacity = clamp(o, 0, 1);
+    const p = clamp((t - a) / (b - a), 0, 1);
+    el.querySelectorAll('.pano').forEach(img => {
+      const [f0, f1] = PANS[img.id]; const w = img.naturalWidth * (1080 / img.naturalHeight);
+      const f = f0 + (f1 - f0) * ease(p);
+      img.style.transform = `translateX(${(960 - w * f).toFixed(1)}px) scale(${1 + 0.04 * p})`;
+      img.style.transformOrigin = `${(f * 100).toFixed(1)}% 50%`;
+    });
+    el.querySelectorAll('.shot').forEach(img => { img.style.transform = `scale(${(1.0 + 0.035 * ease(p)).toFixed(4)})`; });
+    const cap = el.querySelector('.cap');
+    if (cap) { const c = Math.min(fadeIn(t, a + 1.0, 0.8), 1 - fadeIn(t, b - 1.2, 0.6));
+      cap.style.opacity = c; cap.style.transform = `translateY(${((1 - fadeIn(t, a + 1.0, 0.8)) * 24).toFixed(1)}px)`; }
+  }
+  $('o1').style.opacity = fadeIn(t, 0.6, 1.2);
+  $('o2').style.opacity = fadeIn(t, 2.2, 1.4);
+  ['F1', 'F2', 'F3', 'F4', 'F5'].forEach((id, i) => { const f = fadeIn(t, 54 + i * 1.3, 0.8);
+    $(id).style.opacity = f; $(id).style.transform = `translateY(${((1 - f) * 20).toFixed(1)}px)`; });
+  $('T1').style.opacity = fadeIn(t, 61.8, 1.5);
+  $('T1').style.letterSpacing = (18 + 10 * (1 - ease(fadeIn(t, 61.8, 3)))) + 'px';
+  $('T2').style.width = (ease(fadeIn(t, 63, 1.2)) * 520) + 'px';
+  $('T3').style.opacity = fadeIn(t, 63.6, 1.2);
+  $('T4').style.opacity = fadeIn(t, 65, 1.2);
+  // fade the whole thing to black at the very end
+  document.body.style.opacity = 1 - fadeIn(t, DURATION - 1.2, 1.2);
+}
+window.render = render; window.DURATION = DURATION;
+window.ready = Promise.all([document.fonts.ready, ...[...document.images].map(i => i.complete ? 1 : new Promise(r => { i.onload = i.onerror = r; }))]);
+</script>
+</body>
+</html>
